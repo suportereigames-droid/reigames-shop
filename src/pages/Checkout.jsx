@@ -69,8 +69,11 @@ export default function Checkout() {
         {error && <p className="text-sm text-ember">{error}</p>}
 
         <button type="submit" disabled={sending} className="btn-primary w-full">
-          {sending ? 'Redirecionando ao Mercado Pago...' : 'Pagar com Mercado Pago'}
+          {sending ? 'Redirecionando...' : 'Continuar para pagamento'}
         </button>
+        <p className="text-center text-xs text-mist">
+          Na próxima tela você escolhe como pagar: Pix, cartão de crédito ou débito — processado com segurança pelo Mercado Pago.
+        </p>
       </form>
     </div>
   )
