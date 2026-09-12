@@ -3,14 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext.jsx'
 
-const GAMES = ['EFOOTBALL', 'Clash of Clans', 'Clash Royale', 'Brawl Stars', 'Hay Day', 'Wartune Ultra']
 const BUCKET = 'product-images'
 
-const emptyForm = { game: GAMES[0], title: '', description: '', price: '', whatsapp: '', status: 'disponivel' }
-
-// Cada item de "itens" é: { id, kind: 'existente' | 'novo', type: 'image'|'video', path?, url, file? }
-// A ORDEM desse array é a ordem final que vai aparecer no anúncio — a
-// primeira posição é a capa mostrada na vitrine.
+const emptyForm = { game: '', subcategory: '', title: '', description: '', price: '', whatsapp: '', status: 'disponivel' }
 
 export default function ProductForm() {
   const { id } = useParams()
@@ -18,35 +13,58 @@ export default function ProductForm() {
   const { user } = useAuth()
   const navigate = useNavigate()
 
+  const [categorias, setCategorias] = useState([])
+  const [subcategorias, setSubcategorias] = useState([])
   const [form, setForm] = useState(emptyForm)
   const [itens, setItens] = useState([])
-  const [loading, setLoading] = useState(isEditing)
+  const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
-    if (!isEditing) return
-    async function load() {
-      const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
-      if (error || !data) {
-        setError('Conta não encontrada ou você não tem permissão para editá-la.')
-      } else {
-        setForm({
-          game: data.game,
-          title: data.title,
-          description: data.description,
-          price: data.price,
-          whatsapp: data.whatsapp || '',
-          status: data.status
-        })
-        setItens(
-          (data.media || []).map((m) => ({ id: m.path, kind: 'existente', type: m.type, path: m.path, url: m.url }))
-        )
+    async function carregar() {
+      const { data: cats } = await supabase.from('categories').select('*').order('sort_order')
+      setCategorias(cats || [])
+
+      if (isEditing) {
+        const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
+        if (error || !data) {
+          setError('Conta não encontrada ou você não tem permissão para editá-la.')
+        } else {
+          setForm({
+            game: data.game,
+            subcategory: data.subcategory || '',
+            title: data.title,
+            description: data.description,
+            price: data.price,
+            whatsapp: data.whatsapp || '',
+            status: data.status
+          })
+          setItens(
+            (data.media || []).map((m) => ({ id: m.path, kind: 'existente', type: m.type, path: m.path, url: m.url }))
+          )
+        }
+      } else if (cats?.length) {
+        setForm((f) => ({ ...f, game: cats[0].name }))
       }
       setLoading(false)
     }
-    load()
+    carregar()
   }, [id, isEditing])
+
+  useEffect(() => {
+    const categoriaAtual = categorias.find((c) => c.name === form.game)
+    if (!categoriaAtual) {
+      setSubcategorias([])
+      return
+    }
+    supabase
+      .from('subcategories')
+      .select('*')
+      .eq('category_id', categoriaAtual.id)
+      .order('sort_order')
+      .then(({ data }) => setSubcategorias(data || []))
+  }, [form.game, categorias])
 
   function adicionarArquivos(fileList) {
     const novos = Array.from(fileList).map((file) => ({
@@ -54,7 +72,7 @@ export default function ProductForm() {
       kind: 'novo',
       type: file.type.startsWith('video') ? 'video' : 'image',
       file,
-      url: URL.createObjectURL(file) // só pra pré-visualizar, some ao recarregar
+      url: URL.createObjectURL(file)
     }))
     setItens((prev) => [...prev, ...novos])
   }
@@ -81,8 +99,6 @@ export default function ProductForm() {
     setSaving(true)
     setError('')
     try {
-      // Envia os arquivos novos, na MESMA ordem em que estão na tela, e
-      // monta o array final de mídia respeitando essa ordem.
       const mediaFinal = []
       for (const item of itens) {
         if (item.kind === 'existente') {
@@ -98,6 +114,7 @@ export default function ProductForm() {
 
       const payload = {
         game: form.game,
+        subcategory: form.subcategory || null,
         title: form.title,
         description: form.description,
         price: Number(form.price),
@@ -129,11 +146,24 @@ export default function ProductForm() {
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
-          <label className="mb-1 block text-sm text-mist">Jogo</label>
-          <select className="input" value={form.game} onChange={(e) => setForm({ ...form, game: e.target.value })}>
-            {GAMES.map((g) => <option key={g} value={g}>{g}</option>)}
+          <label className="mb-1 block text-sm text-mist">Categoria</label>
+          <select className="input" value={form.game} onChange={(e) => setForm({ ...form, game: e.target.value, subcategory: '' })}>
+            {categorias.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
           </select>
+          {categorias.length === 0 && (
+            <p className="mt-1 text-xs text-mist">Nenhuma categoria cadastrada — crie uma no app, na aba Site.</p>
+          )}
         </div>
+
+        {subcategorias.length > 0 && (
+          <div>
+            <label className="mb-1 block text-sm text-mist">Subcategoria (opcional)</label>
+            <select className="input" value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })}>
+              <option value="">Nenhuma</option>
+              {subcategorias.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
+            </select>
+          </div>
+        )}
 
         <div>
           <label className="mb-1 block text-sm text-mist">Título do anúncio</label>
@@ -155,30 +185,24 @@ export default function ProductForm() {
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className="mb-1 block text-sm text-mist">Preço (R$)</label>
-            <input
-              type="number" step="0.01" min="0" className="input"
-              value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              required
-            />
-          </div>
-          <div>
-            <label className="mb-1 block text-sm text-mist">Status</label>
-            <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-              <option value="disponivel">Disponível</option>
-              <option value="reservado">Reservado</option>
-              <option value="vendido">Vendido</option>
-              <option value="oculto">Oculto</option>
-            </select>
-          </div>
+        <div>
+          <label className="mb-1 block text-sm text-mist">Preço (R$)</label>
+          <input
+            type="number" step="0.01" min="0" className="input"
+            value={form.price}
+            onChange={(e) => setForm({ ...form, price: e.target.value })}
+            required
+          />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm text-mist">WhatsApp para entrega</label>
-          <input className="input" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} />
+          <label className="mb-1 block text-sm text-mist">Status</label>
+          <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+            <option value="disponivel">Disponível</option>
+            <option value="reservado">Reservado</option>
+            <option value="vendido">Vendido</option>
+            <option value="oculto">Oculto</option>
+          </select>
         </div>
 
         <div>
