@@ -62,7 +62,7 @@ export default function ProductDetail() {
       )}
 
       <span className="mt-6 inline-block text-sm uppercase tracking-wide text-emerald">{product.game}</span>
-      <h1 className="mt-1 text-3xl font-bold text-white">{product.title}</h1>
+      <h1 className="mt-1 text-3xl font-bold text-ink">{product.title}</h1>
       <p className="mt-4 whitespace-pre-line text-mist">{product.description}</p>
 
       <div className="mt-8 flex items-center justify-between rounded-lg border border-line bg-panel p-6">

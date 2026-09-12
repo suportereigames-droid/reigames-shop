@@ -28,7 +28,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-white">Visão geral</h1>
+      <h1 className="text-2xl font-bold text-ink">Visão geral</h1>
       <p className="mt-1 text-mist">
         {isAdmin ? 'Resumo de todas as contas cadastradas pela equipe.' : 'Resumo das contas que você postou.'}
       </p>

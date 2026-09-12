@@ -18,7 +18,7 @@ export default function ProductCard({ product }) {
       </div>
       <div className="p-4">
         <span className="text-xs uppercase tracking-wide text-emerald">{product.game}</span>
-        <h3 className="mt-1 line-clamp-1 text-lg font-semibold text-white">{product.title}</h3>
+        <h3 className="mt-1 line-clamp-1 text-lg font-semibold text-ink">{product.title}</h3>
         <p className="mt-2 text-xl font-bold text-gold">{money(product.price)}</p>
       </div>
     </Link>

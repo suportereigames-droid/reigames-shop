@@ -11,13 +11,13 @@ export default function AdminLayout() {
   }
 
   const linkClass = ({ isActive }) =>
-    `block rounded-md px-3 py-2 text-sm ${isActive ? 'bg-gold/10 text-gold' : 'text-mist hover:text-white'}`
+    `block rounded-md px-3 py-2 text-sm ${isActive ? 'bg-gold/10 text-gold' : 'text-mist hover:text-ink'}`
 
   return (
-    <div className="flex min-h-screen bg-ink">
+    <div className="flex min-h-screen bg-white">
       <aside className="w-56 shrink-0 border-r border-line p-4">
         <div className="mb-6 px-2">
-          <p className="font-display text-lg font-bold text-white">Painel Rei Games</p>
+          <p className="font-display text-lg font-bold text-ink">Painel Rei Games</p>
           <p className="text-xs text-mist">
             {profile?.full_name} · {isAdmin ? 'admin' : 'membro da equipe'}
           </p>

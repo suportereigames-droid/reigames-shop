@@ -27,7 +27,7 @@ export default function Store() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10" id="catalogo">
       <section className="mb-10">
-        <h1 className="text-4xl font-bold text-white md:text-5xl">Contas verificadas, entrega garantida</h1>
+        <h1 className="text-4xl font-bold text-ink md:text-5xl">Contas verificadas, entrega garantida</h1>
         <p className="mt-2 max-w-xl text-mist">
           Compre contas de EFOOTBALL, Clash of Clans, Clash Royale, Brawl Stars e mais, com garantia de 3 meses contra recuperação.
         </p>
@@ -39,7 +39,7 @@ export default function Store() {
             key={g}
             onClick={() => setGame(g)}
             className={`rounded-full border px-4 py-1.5 text-sm capitalize transition-colors ${
-              game === g ? 'border-gold bg-gold/10 text-gold' : 'border-line text-mist hover:text-white'
+              game === g ? 'border-gold bg-gold/10 text-gold' : 'border-line text-mist hover:text-ink'
             }`}
           >
             {g}

@@ -4,14 +4,14 @@ export default {
   theme: {
     extend: {
       colors: {
-        ink: '#0F1115',
-        panel: '#161922',
-        panel2: '#1D212C',
-        line: '#2A2F3B',
-        gold: '#E7B94C',
-        emerald: '#28C08A',
-        ember: '#E8562F',
-        mist: '#8B93A7'
+        ink: '#14161B',
+        panel: '#F7F7F9',
+        panel2: '#EFEFF2',
+        line: '#E2E4E9',
+        gold: '#B8791E',
+        emerald: '#1D9A66',
+        ember: '#D14A22',
+        mist: '#6B7280'
       },
       fontFamily: {
         display: ['"Barlow Condensed"', 'sans-serif'],

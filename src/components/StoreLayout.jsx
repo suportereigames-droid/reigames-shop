@@ -26,7 +26,7 @@ export default function StoreLayout() {
   }, [])
 
   return (
-    <div className="min-h-screen bg-ink">
+    <div className="min-h-screen bg-white">
       <header className="border-b border-line">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
           <Link to="/" className="flex items-center gap-2">
@@ -35,14 +35,14 @@ export default function StoreLayout() {
             ) : (
               <>
                 <span className="font-display text-2xl font-bold uppercase tracking-wide text-gold">Rei</span>
-                <span className="font-display text-2xl font-bold uppercase tracking-wide text-white">Games</span>
+                <span className="font-display text-2xl font-bold uppercase tracking-wide text-ink">Games</span>
               </>
             )}
           </Link>
           <nav className="flex items-center gap-6 text-sm text-mist">
-            <a href="/#catalogo" className="hover:text-white">Catálogo</a>
+            <a href="/#catalogo" className="hover:text-ink">Catálogo</a>
             {menu.map((item) => (
-              <Link key={item.slug} to={`/pagina/${item.slug}`} className="hover:text-white">
+              <Link key={item.slug} to={`/pagina/${item.slug}`} className="hover:text-ink">
                 {item.menu_label}
               </Link>
             ))}

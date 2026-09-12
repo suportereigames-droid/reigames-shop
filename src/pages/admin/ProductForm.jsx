@@ -107,7 +107,7 @@ export default function ProductForm() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-white">{isEditing ? 'Editar conta' : 'Nova conta'}</h1>
+      <h1 className="text-2xl font-bold text-ink">{isEditing ? 'Editar conta' : 'Nova conta'}</h1>
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
@@ -178,7 +178,7 @@ export default function ProductForm() {
                   <button
                     type="button"
                     onClick={() => removerMidiaSalva(i)}
-                    className="absolute right-1 top-1 rounded-full bg-ink/80 px-1.5 text-xs text-ember"
+                    className="absolute right-1 top-1 rounded-full bg-white/80 px-1.5 text-xs text-ember"
                   >
                     ✕
                   </button>
@@ -190,7 +190,7 @@ export default function ProductForm() {
                   <button
                     type="button"
                     onClick={() => removerNovoArquivo(i)}
-                    className="absolute right-1 top-1 rounded-full bg-ink/80 px-1.5 text-xs text-ember"
+                    className="absolute right-1 top-1 rounded-full bg-white/80 px-1.5 text-xs text-ember"
                   >
                     ✕
                   </button>

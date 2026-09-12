@@ -49,7 +49,7 @@ export default function SellerPage() {
         <video src={pagina.banner_video_url} controls className="mb-6 aspect-video w-full rounded-lg bg-panel2" />
       )}
 
-      <h1 className="text-3xl font-bold text-white md:text-4xl">Loja de {pagina.display_name}</h1>
+      <h1 className="text-3xl font-bold text-ink md:text-4xl">Loja de {pagina.display_name}</h1>
       {pagina.banner_text && <p className="mt-2 max-w-xl text-mist">{pagina.banner_text}</p>}
 
       {numero && (

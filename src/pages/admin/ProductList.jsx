@@ -50,7 +50,7 @@ export default function ProductList() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">{isAdmin ? 'Todas as contas' : 'Minhas contas'}</h1>
+        <h1 className="text-2xl font-bold text-ink">{isAdmin ? 'Todas as contas' : 'Minhas contas'}</h1>
         <Link to="/admin/produtos/novo" className="btn-primary">+ Nova conta</Link>
       </div>
 
@@ -74,8 +74,8 @@ export default function ProductList() {
             <tbody>
               {products.map((p) => (
                 <tr key={p.id} className="border-t border-line">
-                  <td className="px-4 py-3 text-white">{p.game}</td>
-                  <td className="px-4 py-3 text-white">{p.title}</td>
+                  <td className="px-4 py-3 text-ink">{p.game}</td>
+                  <td className="px-4 py-3 text-ink">{p.title}</td>
                   <td className="px-4 py-3 text-gold">{money(p.price)}</td>
                   <td className={`px-4 py-3 ${STATUS_LABEL[p.status]?.cor}`}>{STATUS_LABEL[p.status]?.texto}</td>
                   {isAdmin && <td className="px-4 py-3 text-mist">{p.profiles?.full_name}</td>}

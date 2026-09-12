@@ -24,7 +24,7 @@ export default function PaginasList() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-white">Páginas do site</h1>
+        <h1 className="text-2xl font-bold text-ink">Páginas do site</h1>
         <Link to="/admin/paginas/nova" className="btn-primary">+ Nova página</Link>
       </div>
       <p className="mt-1 text-mist">
@@ -50,7 +50,7 @@ export default function PaginasList() {
             <tbody>
               {paginas.map((p) => (
                 <tr key={p.id} className="border-t border-line">
-                  <td className="px-4 py-3 text-white">{p.menu_label}</td>
+                  <td className="px-4 py-3 text-ink">{p.menu_label}</td>
                   <td className="px-4 py-3 text-mist">/pagina/{p.slug}</td>
                   <td className="px-4 py-3 text-mist">{p.show_in_menu ? 'Sim' : 'Não'}</td>
                   <td className="px-4 py-3 text-right">

@@ -43,7 +43,7 @@ export default function PaginaForm() {
 
   return (
     <div className="max-w-2xl">
-      <h1 className="text-2xl font-bold text-white">{isEditing ? 'Editar página' : 'Nova página'}</h1>
+      <h1 className="text-2xl font-bold text-ink">{isEditing ? 'Editar página' : 'Nova página'}</h1>
 
       <form onSubmit={salvar} className="mt-6 space-y-4">
         <div>

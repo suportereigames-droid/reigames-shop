@@ -69,7 +69,7 @@ export default function MinhaLoja() {
 
   return (
     <div className="max-w-xl">
-      <h1 className="text-2xl font-bold text-white">Minha loja</h1>
+      <h1 className="text-2xl font-bold text-ink">Minha loja</h1>
       <p className="mt-1 text-mist">
         Configure o link pessoal que mostra só as suas contas — ex: reigames.com.br/{form.slug || 'seu-link'}
       </p>

@@ -38,7 +38,7 @@ export default function Aparencia() {
 
   return (
     <div className="max-w-md">
-      <h1 className="text-2xl font-bold text-white">Aparência do site</h1>
+      <h1 className="text-2xl font-bold text-ink">Aparência do site</h1>
       <p className="mt-1 text-mist">Troque a logo que aparece no topo do site.</p>
 
       <form onSubmit={salvar} className="mt-6 space-y-4">

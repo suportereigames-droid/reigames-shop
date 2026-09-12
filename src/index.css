@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply bg-ink text-white font-body antialiased;
+    @apply bg-white text-ink font-body antialiased;
   }
   h1, h2, h3, h4 {
     @apply font-display tracking-tight;
@@ -19,10 +19,10 @@
     @apply btn bg-gold text-ink hover:bg-gold/90;
   }
   .btn-ghost {
-    @apply btn border border-line text-white hover:border-mist;
+    @apply btn border border-line text-ink hover:border-gold/60;
   }
   .input {
-    @apply w-full rounded-md border border-line bg-panel2 px-3 py-2 text-white placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-gold/60;
+    @apply w-full rounded-md border border-line bg-white px-3 py-2 text-ink placeholder:text-mist focus:outline-none focus:ring-2 focus:ring-gold/60;
   }
   .card {
     @apply rounded-lg border border-line bg-panel;

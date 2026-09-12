@@ -26,9 +26,9 @@ export default function Login() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-ink px-4">
+    <div className="flex min-h-screen items-center justify-center bg-white px-4">
       <form onSubmit={handleSubmit} className="w-full max-w-sm rounded-lg border border-line bg-panel p-8">
-        <h1 className="text-xl font-bold text-white">Painel Rei Games</h1>
+        <h1 className="text-xl font-bold text-ink">Painel Rei Games</h1>
         <p className="mt-1 text-sm text-mist">Acesso restrito à equipe.</p>
 
         <div className="mt-6 space-y-4">
