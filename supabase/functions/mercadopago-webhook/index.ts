@@ -5,10 +5,9 @@
 // Configure essa URL como "notification_url" no Mercado Pago:
 //   https://<seu-projeto>.supabase.co/functions/v1/mercadopago-webhook
 
-import { serve } from 'https://deno.land/std@0.224.0/http/server.ts'
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 
-serve(async (req) => {
+Deno.serve(async (req) => {
   try {
     const url = new URL(req.url)
     const paymentId = url.searchParams.get('data.id') || url.searchParams.get('id')
