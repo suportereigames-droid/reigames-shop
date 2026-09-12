@@ -1,0 +1,12 @@
+{
+  "expo": {
+    "extra": {
+      "eas": {
+        "projectId": "30777f73-fc73-44db-9fdc-ee926e3f69b8"
+      }
+    },
+    "android": {
+      "package": "com.reigames.reigamesshop"
+    }
+  }
+}
