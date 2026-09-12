@@ -6,6 +6,7 @@ import Checkout from './pages/Checkout.jsx'
 import CheckoutStatus from './pages/CheckoutStatus.jsx'
 import SellerPage from './pages/SellerPage.jsx'
 import CustomPage from './pages/CustomPage.jsx'
+import MinhaConta from './pages/MinhaConta.jsx'
 import Login from './pages/admin/Login.jsx'
 import AdminLayout from './components/AdminLayout.jsx'
 import Dashboard from './pages/admin/Dashboard.jsx'
@@ -27,6 +28,7 @@ export default function App() {
         <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/checkout/status" element={<CheckoutStatus />} />
         <Route path="/pagina/:slug" element={<CustomPage />} />
+        <Route path="/minha-conta" element={<MinhaConta />} />
         {/* Link pessoal de cada vendedor, ex: reigames.com.br/joao — fica por
             último entre as rotas da loja pública porque é a mais "genérica";
             o React Router já dá prioridade às rotas com trecho fixo acima. */}

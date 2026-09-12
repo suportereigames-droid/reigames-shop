@@ -10,8 +10,22 @@ import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4'
 Deno.serve(async (req) => {
   try {
     const url = new URL(req.url)
-    const paymentId = url.searchParams.get('data.id') || url.searchParams.get('id')
-    const topic = url.searchParams.get('type') || url.searchParams.get('topic')
+    let paymentId = url.searchParams.get('data.id') || url.searchParams.get('id')
+    let topic = url.searchParams.get('type') || url.searchParams.get('topic')
+
+    // Formato mais novo do Mercado Pago: em vez de vir na URL, a informação
+    // vem dentro do corpo (JSON) da requisição. Tentamos ler dos dois jeitos.
+    if (!paymentId && req.method === 'POST') {
+      try {
+        const corpo = await req.json()
+        paymentId = corpo?.data?.id ? String(corpo.data.id) : null
+        topic = corpo?.type || (corpo?.action ? String(corpo.action).split('.')[0] : topic)
+      } catch {
+        // corpo vazio ou não é JSON — segue com o que já tinha da URL, se tinha
+      }
+    }
+
+    console.log('webhook recebido:', { topic, paymentId })
 
     if (topic !== 'payment' || !paymentId) {
       return new Response('ignorado', { status: 200 })
@@ -31,6 +45,7 @@ Deno.serve(async (req) => {
       cancelled: 'cancelado'
     }
     const novoStatus = statusMap[payment.status] || 'pendente'
+    console.log('pagamento consultado:', { orderId, statusMercadoPago: payment.status, novoStatus })
 
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,

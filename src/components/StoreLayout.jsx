@@ -57,6 +57,7 @@ export default function StoreLayout() {
           </Link>
           <nav className="flex items-center gap-6 text-sm text-mist">
             <a href="/#catalogo" className="hover:text-ink">Catálogo</a>
+            <Link to="/minha-conta" className="hover:text-ink">Minha conta</Link>
             {menu.map((item) => (
               <Link key={item.slug} to={`/pagina/${item.slug}`} className="hover:text-ink">
                 {item.menu_label}

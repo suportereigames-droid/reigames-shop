@@ -19,8 +19,8 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: CORS_HEADERS })
 
   try {
-    const { productId, buyerName, buyerWhatsapp } = await req.json()
-    if (!productId || !buyerName || !buyerWhatsapp) {
+    const { productId, buyerName, buyerWhatsapp, buyerEmail } = await req.json()
+    if (!productId || !buyerName || !buyerWhatsapp || !buyerEmail) {
       return json({ error: 'Dados incompletos.' }, 400)
     }
 
@@ -31,7 +31,7 @@ Deno.serve(async (req) => {
 
     const { data: product, error: productError } = await supabase
       .from('products')
-      .select('id, title, price, status, created_by')
+      .select('id, title, game, price, status, created_by')
       .eq('id', productId)
       .single()
 
@@ -42,9 +42,12 @@ Deno.serve(async (req) => {
       .from('orders')
       .insert({
         product_id: product.id,
+        product_game: product.game,
+        product_title: product.title,
         seller_id: product.created_by,
         buyer_name: buyerName,
         buyer_whatsapp: buyerWhatsapp,
+        buyer_email: buyerEmail,
         amount: product.price,
         status: 'pendente'
       })
@@ -69,7 +72,7 @@ Deno.serve(async (req) => {
             unit_price: Number(product.price)
           }
         ],
-        payer: { name: buyerName },
+        payer: { name: buyerName, email: buyerEmail },
         external_reference: order.id,
         back_urls: {
           success: `${siteUrl}/checkout/status?status=approved`,
