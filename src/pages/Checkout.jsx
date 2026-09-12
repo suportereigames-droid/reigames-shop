@@ -13,6 +13,7 @@ export default function Checkout() {
   const [etapa, setEtapa] = useState('dados') // 'dados' | 'pagamento' | 'pix' | 'processando'
   const [carregandoBrick, setCarregandoBrick] = useState(false)
   const [pix, setPix] = useState(null)
+  const [copiado, setCopiado] = useState(false)
   const orderIdRef = useRef(null)
   const intervaloRef = useRef(null)
   const brickRef = useRef(null)
@@ -49,10 +50,10 @@ export default function Checkout() {
     const { data: status } = await supabase.rpc('pedido_status', { pedido_id: orderIdRef.current })
     if (status === 'pago') {
       clearInterval(intervaloRef.current)
-      navigate('/checkout/status?status=approved')
+      navigate(`/checkout/status?status=approved&pedido=${orderIdRef.current}`)
     } else if (status === 'cancelado' || status === 'estornado') {
       clearInterval(intervaloRef.current)
-      navigate('/checkout/status?status=failure')
+      navigate(`/checkout/status?status=failure&pedido=${orderIdRef.current}`)
     }
   }
 
@@ -128,9 +129,9 @@ export default function Checkout() {
                 if (data.pix) {
                   iniciarPix(data.pix, data.order_id)
                 } else if (data.status === 'approved') {
-                  navigate('/checkout/status?status=approved')
+                  navigate(`/checkout/status?status=approved&pedido=${data.order_id}`)
                 } else if (data.status === 'rejected') {
-                  navigate('/checkout/status?status=failure')
+                  navigate(`/checkout/status?status=failure&pedido=${data.order_id}`)
                 } else {
                   orderIdRef.current = data.order_id
                   setEtapa('pix')
@@ -167,10 +168,14 @@ export default function Checkout() {
           <div className="mt-4">
             <textarea readOnly value={pix.qr_code} className="input h-20 text-xs" onFocus={(e) => e.target.select()} />
             <button
-              onClick={() => navigator.clipboard.writeText(pix.qr_code)}
+              onClick={() => {
+                navigator.clipboard.writeText(pix.qr_code)
+                setCopiado(true)
+                setTimeout(() => setCopiado(false), 2000)
+              }}
               className="btn-ghost mt-2 w-full"
             >
-              Copiar código
+              {copiado ? 'Copiado! ✓' : 'Copiar código'}
             </button>
           </div>
         )}
