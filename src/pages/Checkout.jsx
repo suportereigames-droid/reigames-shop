@@ -122,7 +122,6 @@ export default function Checkout() {
           <label className="mb-1 block text-sm text-mist">WhatsApp para entrega da conta</label>
           <input
             className="input"
-            placeholder="(DDD) 9 9999-9999"
             value={form.whatsapp}
             onChange={(e) => setForm({ ...form, whatsapp: e.target.value })}
           />
@@ -132,7 +131,6 @@ export default function Checkout() {
           <input
             type="email"
             className="input"
-            placeholder="voce@email.com"
             value={form.email}
             onChange={(e) => setForm({ ...form, email: e.target.value })}
           />

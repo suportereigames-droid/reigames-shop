@@ -111,7 +111,6 @@ export default function MinhaConta() {
           <input
             type="email"
             className="input"
-            placeholder="voce@email.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
