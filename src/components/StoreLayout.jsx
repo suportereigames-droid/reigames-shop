@@ -8,10 +8,26 @@ export default function StoreLayout() {
   const [menu, setMenu] = useState([])
 
   useEffect(() => {
-    // Registra a visita de forma anônima (a policy de RLS só permite INSERT,
-    // ninguém de fora consegue ler essa tabela — só o admin no app TT).
-    supabase.from('site_visits').insert({ path: location.pathname }).then(() => {})
-  }, [location.pathname])
+    // Conta só 1 visita por sessão de navegador (aba aberta), não uma pra
+    // cada página que a pessoa clica — assim o número reflete visitantes
+    // de verdade, não cliques dentro do próprio site.
+    if (!sessionStorage.getItem('rg_visita_registrada')) {
+      sessionStorage.setItem('rg_visita_registrada', '1')
+      supabase.from('site_visits').insert({ path: location.pathname }).then(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    // Presença em tempo real: enquanto essa aba estiver aberta no site,
+    // ela "avisa" o canal — o app soma quantas abas estão conectadas agora.
+    const canal = supabase.channel('site-presence', {
+      config: { presence: { key: crypto.randomUUID() } }
+    })
+    canal.subscribe((status) => {
+      if (status === 'SUBSCRIBED') canal.track({ em: location.pathname, desde: new Date().toISOString() })
+    })
+    return () => { supabase.removeChannel(canal) }
+  }, [])
 
   useEffect(() => {
     supabase.from('site_settings').select('logo_url').single().then(({ data }) => {
