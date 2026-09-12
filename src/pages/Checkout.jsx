@@ -35,7 +35,18 @@ export default function Checkout() {
       if (fnError) throw fnError
       window.location.href = data.init_point
     } catch (err) {
-      setError('Não foi possível iniciar o pagamento. Tente novamente em instantes.')
+      // Tenta extrair a mensagem real que a função devolveu, em vez de
+      // mostrar só um aviso genérico — ajuda a identificar o problema.
+      let detalhe = err.message || 'erro desconhecido'
+      try {
+        if (err.context && typeof err.context.json === 'function') {
+          const corpo = await err.context.json()
+          detalhe = corpo.error ? `${corpo.error}${corpo.detail ? ' — ' + JSON.stringify(corpo.detail) : ''}` : JSON.stringify(corpo)
+        }
+      } catch {
+        // se não der pra ler o corpo do erro, fica só com err.message mesmo
+      }
+      setError(`Não foi possível iniciar o pagamento: ${detalhe}`)
       setSending(false)
     }
   }
