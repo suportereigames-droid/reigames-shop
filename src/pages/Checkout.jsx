@@ -89,7 +89,7 @@ export default function Checkout() {
         }
       })
       if (fnError || data?.error) {
-        setError(data?.error || 'Não foi possível simular o pagamento.')
+        setError(data?.error || fnError?.message || 'Não foi possível simular o pagamento.')
         return
       }
       navigate(`/checkout/status?status=approved&pedido=${data.orderId}`)

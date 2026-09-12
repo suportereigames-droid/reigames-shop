@@ -59,7 +59,7 @@ export default function Store() {
         ))}
       </div>
 
-      {subcategorias.length > 1 && (
+      {game !== 'todos' && subcategorias.length > 1 && (
         <div className="mb-4 flex flex-wrap gap-2 sm:mb-6">
           {subcategorias.map((s) => (
             <button
