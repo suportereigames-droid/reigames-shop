@@ -11,6 +11,7 @@ export default function Checkout() {
   const [form, setForm] = useState({ nome: '', whatsapp: '', email: '' })
   const [error, setError] = useState('')
   const [etapa, setEtapa] = useState('dados') // 'dados' | 'pagamento' | 'pix' | 'processando'
+  const [carregandoBrick, setCarregandoBrick] = useState(false)
   const [pix, setPix] = useState(null)
   const orderIdRef = useRef(null)
   const intervaloRef = useRef(null)
@@ -52,7 +53,7 @@ export default function Checkout() {
       const script = document.createElement('script')
       script.src = 'https://sdk.mercadopago.com/js/v2'
       script.onload = resolve
-      script.onerror = reject
+      script.onerror = () => reject(new Error('Falha ao carregar o script do Mercado Pago.'))
       document.body.appendChild(script)
     })
   }
@@ -64,55 +65,76 @@ export default function Checkout() {
       setError('Preencha nome, WhatsApp e e-mail.')
       return
     }
-    setEtapa('pagamento')
-
-    await carregarSdkMercadoPago()
-    const mp = new window.MercadoPago(PUBLIC_KEY, { locale: 'pt-BR' })
-
-    if (brickRef.current) {
-      brickRef.current.unmount()
+    if (!PUBLIC_KEY) {
+      setError('Configuração do pagamento incompleta (falta a chave pública do Mercado Pago). Avisa o suporte da loja.')
+      return
     }
 
-    brickRef.current = await mp.bricks().create('payment', 'brick-pagamento', {
-      initialization: { amount: Number(product.price) },
-      customization: {
-        paymentMethods: { creditCard: 'all', debitCard: 'all', bankTransfer: 'all' }
-      },
-      callbacks: {
-        onReady: () => {},
-        onError: () => {
-          setError('Não foi possível carregar o pagamento. Tente novamente.')
-        },
-        onSubmit: ({ formData }) => {
-          return new Promise(async (resolve, reject) => {
-            setEtapa('processando')
-            const { data, error: fnError } = await supabase.functions.invoke('process-payment', {
-              body: { productId: id, buyerName: form.nome, buyerWhatsapp: form.whatsapp, buyerEmail: form.email, formData }
-            })
+    setEtapa('pagamento')
+    setCarregandoBrick(true)
 
-            if (fnError || data?.error) {
-              setError('Pagamento não aprovado. Confira os dados e tente novamente.')
-              setEtapa('pagamento')
-              reject()
-              return
-            }
+    try {
+      await carregarSdkMercadoPago()
+      const mp = new window.MercadoPago(PUBLIC_KEY, { locale: 'pt-BR' })
 
-            if (data.pix) {
-              iniciarPix(data.pix, data.order_id)
-            } else if (data.status === 'approved') {
-              navigate('/checkout/status?status=approved')
-            } else if (data.status === 'rejected') {
-              navigate('/checkout/status?status=failure')
-            } else {
-              orderIdRef.current = data.order_id
-              setEtapa('pix') // reaproveita a tela de espera pra "em análise"
-              intervaloRef.current = setInterval(checarStatus, 3000)
-            }
-            resolve()
-          })
-        }
+      if (brickRef.current) {
+        await brickRef.current.unmount()
+        brickRef.current = null
       }
-    })
+
+      brickRef.current = await mp.bricks().create('payment', 'brick-pagamento', {
+        initialization: { amount: Number(product.price) },
+        customization: {
+          paymentMethods: { creditCard: 'all', debitCard: 'all', bankTransfer: 'all' }
+        },
+        callbacks: {
+          onReady: () => setCarregandoBrick(false),
+          onError: (erroBrick) => {
+            console.error('Erro no Payment Brick:', erroBrick)
+            setError('Não foi possível carregar o formulário de pagamento. Tente novamente.')
+            setCarregandoBrick(false)
+          },
+          onSubmit: ({ formData }) => {
+            return new Promise(async (resolve, reject) => {
+              setEtapa('processando')
+              try {
+                const { data, error: fnError } = await supabase.functions.invoke('process-payment', {
+                  body: { productId: id, buyerName: form.nome, buyerWhatsapp: form.whatsapp, buyerEmail: form.email, formData }
+                })
+
+                if (fnError || data?.error) {
+                  setError('Pagamento não aprovado. Confira os dados e tente novamente.')
+                  setEtapa('pagamento')
+                  reject()
+                  return
+                }
+
+                if (data.pix) {
+                  iniciarPix(data.pix, data.order_id)
+                } else if (data.status === 'approved') {
+                  navigate('/checkout/status?status=approved')
+                } else if (data.status === 'rejected') {
+                  navigate('/checkout/status?status=failure')
+                } else {
+                  orderIdRef.current = data.order_id
+                  setEtapa('pix')
+                  intervaloRef.current = setInterval(checarStatus, 3000)
+                }
+                resolve()
+              } catch (err) {
+                setError('Não foi possível processar o pagamento agora.')
+                setEtapa('pagamento')
+                reject(err)
+              }
+            })
+          }
+        }
+      })
+    } catch (err) {
+      console.error('Erro ao montar o Payment Brick:', err)
+      setError('Não foi possível carregar o pagamento. Verifique sua conexão e tente novamente.')
+      setCarregandoBrick(false)
+    }
   }
 
   if (!product) return <p className="mx-auto max-w-md px-4 py-10 text-mist">Carregando...</p>
@@ -179,13 +201,15 @@ export default function Checkout() {
         </form>
       )}
 
-      {(etapa === 'pagamento' || etapa === 'processando') && (
-        <div className="mt-6">
-          {error && <p className="mb-3 text-sm text-ember">{error}</p>}
-          <div id="brick-pagamento" />
-          {etapa === 'processando' && <p className="mt-3 text-center text-mist">Processando pagamento...</p>}
-        </div>
-      )}
+      {/* Fica sempre no DOM (só escondido) enquanto não é a etapa de
+          pagamento, pra garantir que a caixinha já existe quando o
+          Mercado Pago tentar desenhar o formulário nela. */}
+      <div className={etapa === 'pagamento' || etapa === 'processando' ? 'mt-6' : 'hidden'}>
+        {error && <p className="mb-3 text-sm text-ember">{error}</p>}
+        {carregandoBrick && <p className="mb-3 text-center text-mist">Carregando formulário de pagamento...</p>}
+        <div id="brick-pagamento" />
+        {etapa === 'processando' && <p className="mt-3 text-center text-mist">Processando pagamento...</p>}
+      </div>
     </div>
   )
 }
