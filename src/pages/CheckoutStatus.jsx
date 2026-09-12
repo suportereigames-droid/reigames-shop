@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 const MENSAGENS = {
   approved: {
     titulo: 'Pagamento aprovado!',
-    texto: 'Nossa equipe já foi avisada e vai te chamar no WhatsApp pra fazer a entrega. Se quiser, você também pode chamar primeiro:',
+    texto: 'Chame a gente agora pelo WhatsApp abaixo para receber sua conta:',
     cor: 'text-emerald'
   },
   pending: {
@@ -26,11 +26,13 @@ export default function CheckoutStatus() {
   const pedidoId = params.get('pedido')
   const info = MENSAGENS[status] || MENSAGENS.pending
   const [whatsapp, setWhatsapp] = useState(null)
+  const [erroWhatsapp, setErroWhatsapp] = useState(null)
 
   useEffect(() => {
     if (!pedidoId) return
-    supabase.rpc('pedido_contato_vendedor', { pedido_id: pedidoId }).then(({ data }) => {
-      if (data) setWhatsapp(data)
+    supabase.rpc('pedido_contato_vendedor', { pedido_id: pedidoId }).then(({ data, error }) => {
+      if (error) setErroWhatsapp(error.message)
+      else if (data) setWhatsapp(data)
     })
   }, [pedidoId])
 
@@ -48,8 +50,12 @@ export default function CheckoutStatus() {
           rel="noreferrer"
           className="btn-primary mt-6 inline-flex"
         >
-          Chamar no WhatsApp agora
+          Chamar no WhatsApp para receber a conta
         </a>
+      )}
+
+      {erroWhatsapp && (
+        <p className="mt-4 text-xs text-mist">(erro ao buscar contato: {erroWhatsapp})</p>
       )}
 
       <Link to="/" className="btn-ghost mt-8 inline-flex">Voltar para a loja</Link>
