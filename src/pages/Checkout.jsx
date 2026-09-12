@@ -14,6 +14,7 @@ export default function Checkout() {
   const [carregandoBrick, setCarregandoBrick] = useState(false)
   const [pix, setPix] = useState(null)
   const [copiado, setCopiado] = useState(false)
+  const [simulando, setSimulando] = useState(false)
   const orderIdRef = useRef(null)
   const intervaloRef = useRef(null)
   const brickRef = useRef(null)
@@ -73,6 +74,28 @@ export default function Checkout() {
       script.onerror = () => reject(new Error('Falha ao carregar o script do Mercado Pago.'))
       document.body.appendChild(script)
     })
+  }
+
+  async function simularPagamentoAprovado() {
+    setError('')
+    setSimulando(true)
+    try {
+      const { data, error: fnError } = await supabase.functions.invoke('simulate-test-payment', {
+        body: {
+          productId: id,
+          buyerName: form.nome || 'Comprador Teste',
+          buyerWhatsapp: form.whatsapp || '11999999999',
+          buyerEmail: form.email || 'teste@teste.com'
+        }
+      })
+      if (fnError || data?.error) {
+        setError(data?.error || 'Não foi possível simular o pagamento.')
+        return
+      }
+      navigate(`/checkout/status?status=approved&pedido=${data.orderId}`)
+    } finally {
+      setSimulando(false)
+    }
   }
 
   async function abrirFormularioPagamento(e) {
@@ -219,6 +242,17 @@ export default function Checkout() {
           {error && <p className="text-sm text-ember">{error}</p>}
 
           <button type="submit" className="btn-primary w-full">Continuar para pagamento</button>
+
+          {import.meta.env.DEV && (
+            <button
+              type="button"
+              disabled={simulando}
+              onClick={simularPagamentoAprovado}
+              className="w-full rounded border border-dashed border-emerald py-2 text-sm text-emerald"
+            >
+              {simulando ? 'Simulando...' : '🧪 Simular pagamento aprovado (só em teste local)'}
+            </button>
+          )}
         </form>
       )}
 
