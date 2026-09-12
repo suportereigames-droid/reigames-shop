@@ -33,12 +33,12 @@ export default function ProductDetail() {
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="aspect-video w-full overflow-hidden rounded-lg bg-panel2">
+      <div className="aspect-square w-full overflow-hidden rounded-lg bg-panel2">
         {atual && (
           atual.type === 'video' ? (
-            <video src={atual.url} controls className="h-full w-full object-cover" />
+            <video src={atual.url} controls className="h-full w-full object-contain" />
           ) : (
-            <img src={atual.url} alt={product.title} className="h-full w-full object-cover" />
+            <img src={atual.url} alt={product.title} className="h-full w-full object-contain" />
           )
         )}
       </div>
@@ -52,9 +52,9 @@ export default function ProductDetail() {
               className={`h-16 w-24 overflow-hidden rounded border ${i === ativo ? 'border-gold' : 'border-line'}`}
             >
               {m.type === 'video' ? (
-                <video src={m.url} muted className="h-full w-full object-cover" />
+                <video src={m.url} muted className="h-full w-full object-contain" />
               ) : (
-                <img src={m.url} alt="" className="h-full w-full object-cover" />
+                <img src={m.url} alt="" className="h-full w-full object-contain" />
               )}
             </button>
           ))}

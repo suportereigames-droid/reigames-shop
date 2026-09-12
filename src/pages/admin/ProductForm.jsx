@@ -8,6 +8,10 @@ const BUCKET = 'product-images'
 
 const emptyForm = { game: GAMES[0], title: '', description: '', price: '', whatsapp: '', status: 'disponivel' }
 
+// Cada item de "itens" é: { id, kind: 'existente' | 'novo', type: 'image'|'video', path?, url, file? }
+// A ORDEM desse array é a ordem final que vai aparecer no anúncio — a
+// primeira posição é a capa mostrada na vitrine.
+
 export default function ProductForm() {
   const { id } = useParams()
   const isEditing = Boolean(id)
@@ -15,8 +19,7 @@ export default function ProductForm() {
   const navigate = useNavigate()
 
   const [form, setForm] = useState(emptyForm)
-  const [media, setMedia] = useState([])          // mídia já salva: [{ type, path, url }]
-  const [novosArquivos, setNovosArquivos] = useState([]) // File[] escolhidos agora, ainda não enviados
+  const [itens, setItens] = useState([])
   const [loading, setLoading] = useState(isEditing)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
@@ -36,7 +39,9 @@ export default function ProductForm() {
           whatsapp: data.whatsapp || '',
           status: data.status
         })
-        setMedia(data.media || [])
+        setItens(
+          (data.media || []).map((m) => ({ id: m.path, kind: 'existente', type: m.type, path: m.path, url: m.url }))
+        )
       }
       setLoading(false)
     }
@@ -44,32 +49,31 @@ export default function ProductForm() {
   }, [id, isEditing])
 
   function adicionarArquivos(fileList) {
-    setNovosArquivos((prev) => [...prev, ...Array.from(fileList)])
+    const novos = Array.from(fileList).map((file) => ({
+      id: `novo-${Date.now()}-${Math.random()}`,
+      kind: 'novo',
+      type: file.type.startsWith('video') ? 'video' : 'image',
+      file,
+      url: URL.createObjectURL(file) // só pra pré-visualizar, some ao recarregar
+    }))
+    setItens((prev) => [...prev, ...novos])
   }
 
-  function removerNovoArquivo(index) {
-    setNovosArquivos((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  // Apaga a mídia já salva tanto da tela quanto do Storage — se o usuário
-  // não salvar de novo, o arquivo já não fica sobrando no bucket.
-  async function removerMidiaSalva(index) {
-    const item = media[index]
-    await supabase.storage.from(BUCKET).remove([item.path])
-    setMedia((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  async function enviarNovosArquivos() {
-    const enviados = []
-    for (const file of novosArquivos) {
-      const tipo = file.type.startsWith('video') ? 'video' : 'image'
-      const path = `${user.id}/${Date.now()}-${file.name}`
-      const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, file)
-      if (uploadError) throw uploadError
-      const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
-      enviados.push({ type: tipo, path, url: data.publicUrl })
+  async function removerItem(item) {
+    if (item.kind === 'existente') {
+      await supabase.storage.from(BUCKET).remove([item.path])
     }
-    return enviados
+    setItens((prev) => prev.filter((i) => i.id !== item.id))
+  }
+
+  function moverItem(index, direcao) {
+    setItens((prev) => {
+      const novaLista = [...prev]
+      const destino = index + direcao
+      if (destino < 0 || destino >= novaLista.length) return prev
+      ;[novaLista[index], novaLista[destino]] = [novaLista[destino], novaLista[index]]
+      return novaLista
+    })
   }
 
   async function handleSubmit(e) {
@@ -77,7 +81,21 @@ export default function ProductForm() {
     setSaving(true)
     setError('')
     try {
-      const enviados = await enviarNovosArquivos()
+      // Envia os arquivos novos, na MESMA ordem em que estão na tela, e
+      // monta o array final de mídia respeitando essa ordem.
+      const mediaFinal = []
+      for (const item of itens) {
+        if (item.kind === 'existente') {
+          mediaFinal.push({ type: item.type, path: item.path, url: item.url })
+        } else {
+          const path = `${user.id}/${Date.now()}-${item.file.name}`
+          const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, item.file)
+          if (uploadError) throw uploadError
+          const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+          mediaFinal.push({ type: item.type, path, url: data.publicUrl })
+        }
+      }
+
       const payload = {
         game: form.game,
         title: form.title,
@@ -85,7 +103,7 @@ export default function ProductForm() {
         price: Number(form.price),
         whatsapp: form.whatsapp,
         status: form.status,
-        media: [...media, ...enviados]
+        media: mediaFinal
       }
 
       if (isEditing) {
@@ -165,35 +183,47 @@ export default function ProductForm() {
 
         <div>
           <label className="mb-1 block text-sm text-mist">Fotos e vídeos da conta</label>
+          <p className="mb-2 text-xs text-mist">
+            A primeira da lista é a que aparece na vitrine. Use as setinhas pra mudar a ordem.
+          </p>
 
-          {(media.length > 0 || novosArquivos.length > 0) && (
+          {itens.length > 0 && (
             <div className="mb-3 flex flex-wrap gap-2">
-              {media.map((m, i) => (
-                <div key={`salvo-${i}`} className="relative h-20 w-28 overflow-hidden rounded border border-line">
-                  {m.type === 'video' ? (
-                    <video src={m.url} muted className="h-full w-full object-cover" />
+              {itens.map((item, i) => (
+                <div key={item.id} className="relative h-24 w-32 overflow-hidden rounded border border-line bg-panel2">
+                  {item.type === 'video' ? (
+                    <video src={item.url} muted className="h-full w-full object-contain" />
                   ) : (
-                    <img src={m.url} alt="" className="h-full w-full object-cover" />
+                    <img src={item.url} alt="" className="h-full w-full object-contain" />
+                  )}
+                  {i === 0 && (
+                    <span className="absolute left-1 top-1 rounded bg-gold px-1.5 text-[10px] font-bold text-ink">CAPA</span>
                   )}
                   <button
                     type="button"
-                    onClick={() => removerMidiaSalva(i)}
-                    className="absolute right-1 top-1 rounded-full bg-white/80 px-1.5 text-xs text-ember"
+                    onClick={() => removerItem(item)}
+                    className="absolute right-1 top-1 rounded-full bg-ink/80 px-1.5 text-xs text-white"
                   >
                     ✕
                   </button>
-                </div>
-              ))}
-              {novosArquivos.map((f, i) => (
-                <div key={`novo-${i}`} className="relative flex h-20 w-28 items-center justify-center rounded border border-dashed border-gold/60 bg-panel2 px-2 text-center text-xs text-gold">
-                  {f.name}
-                  <button
-                    type="button"
-                    onClick={() => removerNovoArquivo(i)}
-                    className="absolute right-1 top-1 rounded-full bg-white/80 px-1.5 text-xs text-ember"
-                  >
-                    ✕
-                  </button>
+                  <div className="absolute bottom-1 right-1 flex gap-1">
+                    <button
+                      type="button"
+                      disabled={i === 0}
+                      onClick={() => moverItem(i, -1)}
+                      className="rounded bg-ink/80 px-1.5 text-xs text-white disabled:opacity-30"
+                    >
+                      ◀
+                    </button>
+                    <button
+                      type="button"
+                      disabled={i === itens.length - 1}
+                      onClick={() => moverItem(i, 1)}
+                      className="rounded bg-ink/80 px-1.5 text-xs text-white disabled:opacity-30"
+                    >
+                      ▶
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -206,7 +236,6 @@ export default function ProductForm() {
             onChange={(e) => adicionarArquivos(e.target.files)}
             className="text-sm text-mist"
           />
-          <p className="mt-1 text-xs text-mist">Pode escolher várias fotos e vídeos juntos.</p>
         </div>
 
         {error && <p className="text-sm text-ember">{error}</p>}

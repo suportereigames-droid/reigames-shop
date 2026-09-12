@@ -7,13 +7,13 @@ export default function ProductCard({ product }) {
 
   return (
     <Link to={`/produto/${product.id}`} className="card group overflow-hidden transition-colors hover:border-gold/60">
-      <div className="aspect-video w-full overflow-hidden bg-panel2">
+      <div className="aspect-square w-full overflow-hidden bg-panel2">
         {!capa ? (
           <div className="flex h-full items-center justify-center text-mist">Sem mídia</div>
         ) : capa.type === 'video' ? (
-          <video src={capa.url} muted className="h-full w-full object-cover" />
+          <video src={capa.url} muted className="h-full w-full object-contain" />
         ) : (
-          <img src={capa.url} alt={product.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          <img src={capa.url} alt={product.title} className="h-full w-full object-contain transition-transform group-hover:scale-105" />
         )}
       </div>
       <div className="p-4">
