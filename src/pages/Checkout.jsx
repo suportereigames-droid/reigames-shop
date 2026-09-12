@@ -28,6 +28,22 @@ export default function Checkout() {
 
   useEffect(() => () => clearInterval(intervaloRef.current), [])
 
+  // Avisa o navegador pra perguntar antes de sair (atualizar/fechar a aba)
+  // se a pessoa já começou a preencher algo ou está no meio do pagamento —
+  // assim ela não perde tudo sem querer.
+  useEffect(() => {
+    const emAndamento = etapa !== 'dados' || form.nome || form.whatsapp || form.email
+
+    function avisar(e) {
+      if (!emAndamento) return
+      e.preventDefault()
+      e.returnValue = '' // navegadores modernos ignoram o texto e mostram uma mensagem padrão deles
+    }
+
+    window.addEventListener('beforeunload', avisar)
+    return () => window.removeEventListener('beforeunload', avisar)
+  }, [etapa, form])
+
   async function checarStatus() {
     if (!orderIdRef.current) return
     const { data: status } = await supabase.rpc('pedido_status', { pedido_id: orderIdRef.current })
