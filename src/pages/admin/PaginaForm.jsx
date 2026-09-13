@@ -139,20 +139,30 @@ export default function PaginaForm() {
           <label className="mb-1 block text-sm text-mist">
             Imagem da página <span className="text-xs">(usada na galeria da categoria, se ela estiver numa)</span>
           </label>
-          {form.image_url && (
-            <img src={form.image_url} alt="" className="mb-2 h-32 w-full rounded object-cover" />
-          )}
-          <label className="btn-ghost inline-block cursor-pointer">
-            {enviandoImagem ? 'Enviando...' : form.image_url ? 'Trocar imagem' : 'Escolher imagem'}
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => enviarImagem(e.target.files[0])}
-              className="hidden"
-            />
-          </label>
-          {form.image_url && !enviandoImagem && (
-            <span className="ml-3 text-xs text-emerald">✓ Imagem enviada</span>
+
+          {form.image_url ? (
+            <div>
+              <img src={form.image_url} alt="" className="mb-2 h-32 w-full rounded object-cover" />
+              <div className="flex items-center gap-3">
+                <label className="btn-ghost inline-block cursor-pointer text-sm">
+                  {enviandoImagem ? 'Enviando...' : 'Trocar imagem'}
+                  <input type="file" accept="image/*" onChange={(e) => enviarImagem(e.target.files[0])} className="hidden" />
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setForm((f) => ({ ...f, image_url: null }))}
+                  className="text-sm text-ember"
+                >
+                  Remover imagem
+                </button>
+              </div>
+              {!enviandoImagem && <span className="mt-1 inline-block text-xs text-emerald">✓ Imagem enviada</span>}
+            </div>
+          ) : (
+            <label className="btn-ghost inline-block cursor-pointer">
+              {enviandoImagem ? 'Enviando...' : 'Escolher imagem'}
+              <input type="file" accept="image/*" onChange={(e) => enviarImagem(e.target.files[0])} className="hidden" />
+            </label>
           )}
         </div>
 
