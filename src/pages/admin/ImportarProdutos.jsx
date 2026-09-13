@@ -137,18 +137,14 @@ export default function ImportarProdutos() {
       </p>
 
       <div className="mt-6">
-        <label className="btn-ghost inline-block cursor-pointer">
-          Escolher arquivo CSV
-          <input
-            type="file"
-            accept=".csv"
-            className="sr-only"
-            onChange={(e) => {
-              alert('Evento disparado! Arquivo: ' + (e.target.files[0]?.name || 'NENHUM ARQUIVO'))
-              lerArquivo(e.target.files[0])
-            }}
-          />
-        </label>
+        <p className="mb-2 text-sm font-semibold text-ink">Escolher arquivo CSV:</p>
+        <input
+          type="file"
+          onChange={(e) => {
+            alert('Evento disparado! Arquivo: ' + (e.target.files[0]?.name || 'NENHUM ARQUIVO'))
+            lerArquivo(e.target.files[0])
+          }}
+        />
         {nomeArquivo && <span className="ml-3 text-sm text-mist">{nomeArquivo}</span>}
       </div>
 
