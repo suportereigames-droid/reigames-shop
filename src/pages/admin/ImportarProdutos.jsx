@@ -47,6 +47,7 @@ export default function ImportarProdutos() {
   const [categorias, setCategorias] = useState([])
   const [categoriaEscolhida, setCategoriaEscolhida] = useState('')
   const [nomeArquivo, setNomeArquivo] = useState('')
+  const [lendo, setLendo] = useState(false)
   const [importando, setImportando] = useState(false)
   const [progresso, setProgresso] = useState(0)
   const [resultado, setResultado] = useState('')
@@ -60,20 +61,38 @@ export default function ImportarProdutos() {
     if (!file) return
     setError('')
     setResultado('')
+    setProdutos([])
     setNomeArquivo(file.name)
-    Papa.parse(file, {
-      header: true,
-      skipEmptyLines: true,
-      complete: (resultado) => {
-        const agrupados = agruparPorHandle(resultado.data)
-        if (agrupados.length === 0) {
-          setError('Não achei nenhum produto nesse arquivo. Confere se é o CSV exportado do Shopify mesmo.')
-          return
+    setLendo(true)
+    try {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (resultado) => {
+          setLendo(false)
+          try {
+            const agrupados = agruparPorHandle(resultado.data)
+            if (agrupados.length === 0) {
+              setError(
+                `Li o arquivo (${resultado.data.length} linhas), mas não encontrei nenhum produto reconhecível. ` +
+                `Confere se é o CSV exportado do Shopify (precisa ter as colunas "Handle" e "Title").`
+              )
+              return
+            }
+            setProdutos(agrupados)
+          } catch (err) {
+            setError('Erro ao processar o conteúdo do arquivo: ' + err.message)
+          }
+        },
+        error: (err) => {
+          setLendo(false)
+          setError('Não foi possível ler o arquivo: ' + err.message)
         }
-        setProdutos(agrupados)
-      },
-      error: (err) => setError('Não foi possível ler o arquivo: ' + err.message)
-    })
+      })
+    } catch (err) {
+      setLendo(false)
+      setError('Erro inesperado ao abrir o arquivo: ' + err.message)
+    }
   }
 
   async function importar() {
@@ -124,6 +143,8 @@ export default function ImportarProdutos() {
         </label>
         {nomeArquivo && <span className="ml-3 text-sm text-mist">{nomeArquivo}</span>}
       </div>
+
+      {lendo && <p className="mt-3 text-sm text-mist">Lendo arquivo...</p>}
 
       {error && <p className="mt-3 text-sm text-ember">{error}</p>}
       {resultado && <p className="mt-3 text-sm font-semibold text-emerald">{resultado}</p>}
