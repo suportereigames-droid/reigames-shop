@@ -54,7 +54,11 @@ export default function ProductList() {
       await supabase.storage.from(BUCKET).remove(paths)
     }
 
-    await supabase.from('products').delete().eq('id', product.id)
+    const { error } = await supabase.from('products').delete().eq('id', product.id)
+    if (error) {
+      alert('Não foi possível excluir: ' + error.message)
+      return
+    }
     load()
   }
 
@@ -63,11 +67,14 @@ export default function ProductList() {
     if (ocultas.length === 0) return
     if (!confirm(`Apagar as ${ocultas.length} contas ocultas de uma vez? As fotos/vídeos delas também são apagados. Isso não pode ser desfeito.`)) return
 
+    const erros = []
     for (const p of ocultas) {
       const paths = (p.media || []).map((m) => m.path).filter(Boolean)
       if (paths.length) await supabase.storage.from(BUCKET).remove(paths)
-      await supabase.from('products').delete().eq('id', p.id)
+      const { error } = await supabase.from('products').delete().eq('id', p.id)
+      if (error) erros.push(`${p.title}: ${error.message}`)
     }
+    if (erros.length) alert('Algumas não puderam ser excluídas:\n\n' + erros.join('\n'))
     load()
   }
 
