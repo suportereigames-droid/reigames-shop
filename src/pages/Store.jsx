@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
+import { useSEO } from '../lib/useSEO.js'
 
 function BannerCarousel({ slides, intervalo }) {
   const [indice, setIndice] = useState(0)
@@ -64,6 +65,11 @@ function LinhaComSetas({ children }) {
 }
 
 export default function Store() {
+  useSEO(
+    'REI GAMES — Contas verificadas de EFOOTBALL, Clash of Clans, Clash Royale e mais',
+    'Compre e venda contas de jogos com garantia e entrega segura. Parcelamento no cartão e mediação segura.'
+  )
+
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
   const [categorias, setCategorias] = useState([])

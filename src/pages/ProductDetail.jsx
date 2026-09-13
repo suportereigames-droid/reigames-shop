@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
+import { useSEO } from '../lib/useSEO.js'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -97,6 +98,11 @@ export default function ProductDetail() {
       if (data?.[0]?.whatsapp) setWhatsappDono(data[0].whatsapp)
     })
   }, [id])
+
+  useSEO(
+    product ? `${product.title} — ${money(product.price)} | REI GAMES` : 'Carregando... | REI GAMES',
+    product ? `${product.game}: ${product.title}. ${money(product.price)}, entrega com garantia.` : undefined
+  )
 
   if (loading) return <p className="mx-auto max-w-4xl px-4 py-10 text-mist">Carregando...</p>
   if (!product) return <p className="mx-auto max-w-4xl px-4 py-10 text-mist">Conta não encontrada.</p>
