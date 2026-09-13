@@ -21,6 +21,7 @@ import CategoriasList from './pages/admin/CategoriasList.jsx'
 import BannerList from './pages/admin/BannerList.jsx'
 import ParcelamentoList from './pages/admin/ParcelamentoList.jsx'
 import ImportarProdutos from './pages/admin/ImportarProdutos.jsx'
+import EquipeList from './pages/admin/EquipeList.jsx'
 import MenuList from './pages/admin/MenuList.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
@@ -65,6 +66,7 @@ export default function App() {
         <Route path="banner" element={<BannerList />} />
         <Route path="parcelamento" element={<ParcelamentoList />} />
         <Route path="importar" element={<ImportarProdutos />} />
+        <Route path="equipe" element={<EquipeList />} />
         <Route path="menu" element={<MenuList />} />
       </Route>
 

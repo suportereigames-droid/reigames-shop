@@ -10,11 +10,13 @@ const emptyForm = { game: '', subcategory: '', title: '', description: '', price
 export default function ProductForm() {
   const { id } = useParams()
   const isEditing = Boolean(id)
-  const { user } = useAuth()
+  const { user, isAdmin } = useAuth()
   const navigate = useNavigate()
 
   const [categorias, setCategorias] = useState([])
   const [subcategorias, setSubcategorias] = useState([])
+  const [membros, setMembros] = useState([])
+  const [donoId, setDonoId] = useState('')
   const [form, setForm] = useState(emptyForm)
   const [itens, setItens] = useState([])
   const [loading, setLoading] = useState(true)
@@ -25,6 +27,11 @@ export default function ProductForm() {
     async function carregar() {
       const { data: cats } = await supabase.from('categories').select('*').order('sort_order')
       setCategorias(cats || [])
+
+      if (isAdmin) {
+        const { data: perfis } = await supabase.from('profiles').select('id, full_name').order('full_name')
+        setMembros(perfis || [])
+      }
 
       if (isEditing) {
         const { data, error } = await supabase.from('products').select('*').eq('id', id).single()
@@ -37,9 +44,11 @@ export default function ProductForm() {
             title: data.title,
             description: data.description,
             price: data.price,
+            compare_price: data.compare_price ?? '',
             whatsapp: data.whatsapp || '',
             status: data.status
           })
+          setDonoId(data.created_by || '')
           setItens(
             (data.media || []).map((m) => ({ id: m.path, kind: 'existente', type: m.type, path: m.path, url: m.url }))
           )
@@ -50,7 +59,7 @@ export default function ProductForm() {
       setLoading(false)
     }
     carregar()
-  }, [id, isEditing])
+  }, [id, isEditing, isAdmin])
 
   useEffect(() => {
     const categoriaAtual = categorias.find((c) => c.name === form.game)
@@ -125,7 +134,8 @@ export default function ProductForm() {
       }
 
       if (isEditing) {
-        const { error } = await supabase.from('products').update(payload).eq('id', id)
+        const payloadFinal = isAdmin && donoId ? { ...payload, created_by: donoId } : payload
+        const { error } = await supabase.from('products').update(payloadFinal).eq('id', id)
         if (error) throw error
       } else {
         const { error } = await supabase.from('products').insert({ ...payload, created_by: user.id })
@@ -218,6 +228,20 @@ export default function ProductForm() {
             <option value="oculto">Oculto</option>
           </select>
         </div>
+
+        {isAdmin && isEditing && membros.length > 0 && (
+          <div>
+            <label className="mb-1 block text-sm text-mist">Essa conta é de quem?</label>
+            <select className="input" value={donoId} onChange={(e) => setDonoId(e.target.value)}>
+              {membros.map((m) => (
+                <option key={m.id} value={m.id}>{m.full_name}</option>
+              ))}
+            </select>
+            <p className="mt-1 text-xs text-mist">
+              Útil pra corrigir contas importadas em massa que caíram todas no seu nome.
+            </p>
+          </div>
+        )}
 
         <div>
           <label className="mb-1 block text-sm text-mist">Fotos e vídeos da conta</label>

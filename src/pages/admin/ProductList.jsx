@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext.jsx'
 
@@ -15,15 +15,19 @@ const STATUS_LABEL = {
 
 export default function ProductList() {
   const { isAdmin } = useAuth()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const sellerId = searchParams.get('seller')
+  const [nomeVendedor, setNomeVendedor] = useState('')
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
 
   async function load() {
     setLoading(true)
-    const query = supabase
+    let query = supabase
       .from('products')
       .select(isAdmin ? 'id, game, title, price, status, media, created_by, profiles(full_name)' : 'id, game, title, price, status, media')
       .order('created_at', { ascending: false })
+    if (sellerId) query = query.eq('created_by', sellerId)
     const { data, error } = await query
     if (!error) setProducts(data)
     setLoading(false)
@@ -31,7 +35,14 @@ export default function ProductList() {
 
   useEffect(() => {
     load()
-  }, [])
+    if (sellerId) {
+      supabase.from('profiles').select('full_name').eq('id', sellerId).single().then(({ data }) => {
+        setNomeVendedor(data?.full_name || '')
+      })
+    } else {
+      setNomeVendedor('')
+    }
+  }, [sellerId])
 
   async function handleDelete(product) {
     if (!confirm('Remover esta conta do catálogo? As fotos e vídeos dela também serão apagados.')) return
@@ -50,9 +61,17 @@ export default function ProductList() {
   return (
     <div>
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-ink">{isAdmin ? 'Todas as contas' : 'Minhas contas'}</h1>
+        <h1 className="text-2xl font-bold text-ink">
+          {sellerId ? `Contas de ${nomeVendedor}` : isAdmin ? 'Todas as contas' : 'Minhas contas'}
+        </h1>
         <Link to="/admin/produtos/novo" className="btn-primary">+ Nova conta</Link>
       </div>
+
+      {sellerId && (
+        <button onClick={() => setSearchParams({})} className="mt-2 text-sm text-mist underline">
+          Limpar filtro
+        </button>
+      )}
 
       {loading ? (
         <p className="mt-6 text-mist">Carregando...</p>
