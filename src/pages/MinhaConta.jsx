@@ -11,9 +11,8 @@ const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currenc
 
 export default function MinhaConta() {
   const [sessao, setSessao] = useState(null)
-  const [etapa, setEtapa] = useState('email') // 'email' | 'codigo'
+  const [linkEnviado, setLinkEnviado] = useState(false)
   const [email, setEmail] = useState('')
-  const [codigo, setCodigo] = useState('')
   const [enviando, setEnviando] = useState(false)
   const [erro, setErro] = useState('')
   const [pedidos, setPedidos] = useState(null)
@@ -33,39 +32,30 @@ export default function MinhaConta() {
       .then(({ data }) => setPedidos(data || []))
   }, [sessao])
 
-  async function pedirCodigo(e) {
+  async function enviarLink(e) {
     e.preventDefault()
     setErro('')
     setEnviando(true)
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { shouldCreateUser: true, data: { is_buyer: true } }
+      options: {
+        shouldCreateUser: true,
+        data: { is_buyer: true },
+        emailRedirectTo: `${window.location.origin}/minha-conta`
+      }
     })
     setEnviando(false)
     if (error) {
-      setErro('Não foi possível enviar o código. Confere o e-mail e tenta de novo.')
+      setErro('Não foi possível enviar o link. Confere o e-mail e tenta de novo.')
       return
     }
-    setEtapa('codigo')
-  }
-
-  async function confirmarCodigo(e) {
-    e.preventDefault()
-    setErro('')
-    setEnviando(true)
-    const { error } = await supabase.auth.verifyOtp({ email, token: codigo, type: 'email' })
-    setEnviando(false)
-    if (error) {
-      setErro('Código inválido ou expirado. Confere e tenta de novo.')
-      return
-    }
+    setLinkEnviado(true)
   }
 
   async function sair() {
     await supabase.auth.signOut()
-    setEtapa('email')
+    setLinkEnviado(false)
     setEmail('')
-    setCodigo('')
     setPedidos(null)
   }
 
@@ -106,8 +96,8 @@ export default function MinhaConta() {
       <h1 className="text-2xl font-bold text-ink">Minha conta</h1>
       <p className="mt-1 text-mist">Consulte seus pedidos com o e-mail usado na compra.</p>
 
-      {etapa === 'email' ? (
-        <form onSubmit={pedirCodigo} className="mt-6 space-y-4">
+      {!linkEnviado ? (
+        <form onSubmit={enviarLink} className="mt-6 space-y-4">
           <input
             type="email"
             className="input"
@@ -117,28 +107,19 @@ export default function MinhaConta() {
           />
           {erro && <p className="text-sm text-ember">{erro}</p>}
           <button type="submit" disabled={enviando} className="btn-primary w-full">
-            {enviando ? 'Enviando...' : 'Receber código por e-mail'}
+            {enviando ? 'Enviando...' : 'Receber link por e-mail'}
           </button>
         </form>
       ) : (
-        <form onSubmit={confirmarCodigo} className="mt-6 space-y-4">
-          <p className="text-sm text-mist">Enviamos um código para <strong>{email}</strong>.</p>
-          <input
-            className="input text-center text-lg tracking-widest"
-            placeholder="000000"
-            value={codigo}
-            onChange={(e) => setCodigo(e.target.value)}
-            maxLength={6}
-            required
-          />
-          {erro && <p className="text-sm text-ember">{erro}</p>}
-          <button type="submit" disabled={enviando} className="btn-primary w-full">
-            {enviando ? 'Confirmando...' : 'Entrar'}
-          </button>
-          <button type="button" onClick={() => setEtapa('email')} className="w-full text-center text-xs text-mist">
+        <div className="mt-6 space-y-4">
+          <p className="text-sm text-mist">
+            Enviamos um link de acesso para <strong>{email}</strong>. Abre o e-mail e clica no link — você
+            volta pra essa página já conectado.
+          </p>
+          <button type="button" onClick={() => setLinkEnviado(false)} className="w-full text-center text-xs text-mist">
             Usar outro e-mail
           </button>
-        </form>
+        </div>
       )}
     </div>
   )
