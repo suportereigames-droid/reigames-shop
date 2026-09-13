@@ -6,9 +6,7 @@ export default function BannerList() {
   const [categoriasPagina, setCategoriasPagina] = useState([])
   const [frases, setFrases] = useState('')
   const [parceriasCategoriaId, setParceriasCategoriaId] = useState(null)
-  const [parcelasMax, setParcelasMax] = useState(12)
-  const [parcelasSemJuros, setParcelasSemJuros] = useState(3)
-  const [parcelasJuros, setParcelasJuros] = useState(2.99)
+  const [taxas, setTaxas] = useState({})
   const [salvando, setSalvando] = useState(false)
   const [error, setError] = useState('')
 
@@ -16,15 +14,13 @@ export default function BannerList() {
     const [{ data: bnrs }, { data: cats }, { data: settings }] = await Promise.all([
       supabase.from('banner_slides').select('*').order('sort_order'),
       supabase.from('page_categories').select('*').order('sort_order'),
-      supabase.from('site_settings').select('frases_rotativas, parcerias_categoria_id, parcelas_max, parcelas_sem_juros, parcelas_juros_mensal').single()
+      supabase.from('site_settings').select('frases_rotativas, parcerias_categoria_id, parcelas_taxas').single()
     ])
     setBanners(bnrs || [])
     setCategoriasPagina(cats || [])
     setFrases(settings?.frases_rotativas || '')
     setParceriasCategoriaId(settings?.parcerias_categoria_id || null)
-    setParcelasMax(settings?.parcelas_max ?? 12)
-    setParcelasSemJuros(settings?.parcelas_sem_juros ?? 3)
-    setParcelasJuros(settings?.parcelas_juros_mensal ?? 2.99)
+    setTaxas(settings?.parcelas_taxas || {})
   }
 
   useEffect(() => { load() }, [])
@@ -69,9 +65,7 @@ export default function BannerList() {
       .update({
         frases_rotativas: frases || null,
         parcerias_categoria_id: parceriasCategoriaId,
-        parcelas_max: Number(parcelasMax),
-        parcelas_sem_juros: Number(parcelasSemJuros),
-        parcelas_juros_mensal: Number(parcelasJuros)
+        parcelas_taxas: taxas
       })
       .eq('id', true)
     setSalvando(false)
@@ -80,6 +74,10 @@ export default function BannerList() {
       return
     }
     alert('Salvo!')
+  }
+
+  function mudarTaxa(n, valor) {
+    setTaxas((t) => ({ ...t, [n]: valor === '' ? 0 : Number(valor) }))
   }
 
   return (
@@ -132,21 +130,23 @@ export default function BannerList() {
       </button>
 
       <h2 className="mt-10 font-semibold text-ink">Parcelamento no cartão</h2>
-      <p className="text-sm text-mist">Como calcular as parcelas mostradas na página de cada conta.</p>
+      <p className="text-sm text-mist">
+        % que soma no preço total conforme o número de parcelas (do jeito que sua maquininha/gateway informa —
+        não é taxa mensal). Deixe 0 pra "sem juros".
+      </p>
 
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <div>
-          <label className="mb-1 block text-xs text-mist">Máximo de parcelas</label>
-          <input type="number" min="1" max="24" className="input" value={parcelasMax} onChange={(e) => setParcelasMax(e.target.value)} />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-mist">Quantas sem juros</label>
-          <input type="number" min="1" max="24" className="input" value={parcelasSemJuros} onChange={(e) => setParcelasSemJuros(e.target.value)} />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs text-mist">Juros ao mês (%) das demais</label>
-          <input type="number" step="0.01" min="0" className="input" value={parcelasJuros} onChange={(e) => setParcelasJuros(e.target.value)} />
-        </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+          <div key={n}>
+            <label className="mb-1 block text-xs text-mist">{n}x</label>
+            <input
+              type="number" step="0.01" min="0" className="input"
+              value={taxas[n] ?? ''}
+              onChange={(e) => mudarTaxa(n, e.target.value)}
+              placeholder="0"
+            />
+          </div>
+        ))}
       </div>
 
       <button onClick={salvar} disabled={salvando} className="btn-primary mt-4">

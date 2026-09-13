@@ -68,6 +68,7 @@ export default function Store() {
   const [banners, setBanners] = useState([])
   const [frasesRotativas, setFrasesRotativas] = useState('')
   const [parcerias, setParcerias] = useState([])
+  const [taxasParcelas, setTaxasParcelas] = useState(null)
   const [game, setGame] = useState('todos')
   const [subcategoria, setSubcategoria] = useState('todas')
 
@@ -79,13 +80,14 @@ export default function Store() {
         supabase.from('categories').select('*').order('sort_order'),
         supabase.from('subcategories').select('*').order('sort_order'),
         supabase.from('banner_slides').select('*').order('sort_order'),
-        supabase.from('site_settings').select('frases_rotativas, parcerias_categoria_id').single()
+        supabase.from('site_settings').select('frases_rotativas, parcerias_categoria_id, parcelas_taxas').single()
       ])
       setProducts(prods || [])
       setCategorias(cats || [])
       setSubcategoriasBanco(subs || [])
       setBanners(bnrs || [])
       setFrasesRotativas(settings?.frases_rotativas || '')
+      setTaxasParcelas(settings?.parcelas_taxas || null)
 
       if (settings?.parcerias_categoria_id) {
         const { data: pgs } = await supabase
@@ -201,7 +203,7 @@ export default function Store() {
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-5 lg:grid-cols-4">
           {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard key={p.id} product={p} taxas={taxasParcelas} />
           ))}
         </div>
       )}

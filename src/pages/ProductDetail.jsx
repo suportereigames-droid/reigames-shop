@@ -4,22 +4,19 @@ import { supabase } from '../lib/supabaseClient'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
-function calcularParcelas(preco, config) {
+function calcularParcelas(preco, taxas) {
   const parcelas = []
-  for (let n = 1; n <= config.parcelas_max; n++) {
-    if (n <= config.parcelas_sem_juros) {
-      parcelas.push({ n, valor: preco / n, comJuros: false })
-    } else {
-      const i = config.parcelas_juros_mensal / 100
-      const valorParcela = (preco * i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1)
-      parcelas.push({ n, valor: valorParcela, comJuros: true })
-    }
+  const numeros = Object.keys(taxas).map(Number).sort((a, b) => a - b)
+  for (const n of numeros) {
+    const taxa = taxas[n] || 0
+    const total = preco * (1 + taxa / 100)
+    parcelas.push({ n, valor: total / n, comJuros: taxa > 0 })
   }
   return parcelas
 }
 
-function ModalPagamento({ preco, config, onFechar }) {
-  const parcelas = calcularParcelas(preco, config)
+function ModalPagamento({ preco, taxas, onFechar }) {
+  const parcelas = calcularParcelas(preco, taxas)
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={onFechar}>
       <div
@@ -80,7 +77,7 @@ export default function ProductDetail() {
   const [mostrarZoom, setMostrarZoom] = useState(false)
   const [descricaoAberta, setDescricaoAberta] = useState(false)
   const [whatsappDono, setWhatsappDono] = useState(null)
-  const [config, setConfig] = useState({ parcelas_max: 12, parcelas_sem_juros: 3, parcelas_juros_mensal: 2.99 })
+  const [taxas, setTaxas] = useState({ 1: 0 })
 
   useEffect(() => {
     async function load() {
@@ -95,8 +92,8 @@ export default function ProductDetail() {
     }
     load()
 
-    supabase.from('site_settings').select('parcelas_max, parcelas_sem_juros, parcelas_juros_mensal').single().then(({ data }) => {
-      if (data) setConfig(data)
+    supabase.from('site_settings').select('parcelas_taxas').single().then(({ data }) => {
+      if (data?.parcelas_taxas) setTaxas(data.parcelas_taxas)
     })
     supabase.rpc('site_contato_dono').then(({ data }) => {
       if (data?.[0]?.whatsapp) setWhatsappDono(data[0].whatsapp)
@@ -232,7 +229,7 @@ export default function ProductDetail() {
       </div>
 
       {mostrarPagamento && (
-        <ModalPagamento preco={product.price} config={config} onFechar={() => setMostrarPagamento(false)} />
+        <ModalPagamento preco={product.price} taxas={taxas} onFechar={() => setMostrarPagamento(false)} />
       )}
       {mostrarZoom && atual && (
         <ModalZoom url={atual.url} tipo={atual.type} onFechar={() => setMostrarZoom(false)} />
