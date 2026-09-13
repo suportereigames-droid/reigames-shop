@@ -105,7 +105,7 @@ export default function StoreLayout() {
             </a>
           )}
         </div>
-        <p className="text-xs text-mist/80">
+        <p className="whitespace-pre-line text-xs text-mist/80">
           {config.rodape_texto || `© ${new Date().getFullYear()} Rei Games — contas verificadas, entrega com garantia.`}
         </p>
       </footer>
