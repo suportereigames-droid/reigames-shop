@@ -130,21 +130,21 @@ export default function Store() {
       <section className="mb-6" id="catalogo">
         <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Categorias</h2>
         <LinhaComSetas>
-          <button onClick={() => mudarCategoria('todos')} className="flex w-16 flex-shrink-0 flex-col items-center gap-1.5">
-            <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 text-xs font-bold text-mist ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
+          <button onClick={() => mudarCategoria('todos')} className="flex w-[52px] flex-shrink-0 flex-col items-center gap-1.5">
+            <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 text-xs font-bold text-mist ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
               Todos
             </div>
           </button>
           {categoriasComConta.map((c) => (
-            <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex w-16 flex-shrink-0 flex-col items-center gap-1.5">
-              <div className={`h-16 w-16 overflow-hidden rounded-full border-2 ${game === c.name ? 'border-gold' : 'border-line'}`}>
+            <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex w-[52px] flex-shrink-0 flex-col items-center gap-1.5">
+              <div className={`h-[52px] w-[52px] overflow-hidden rounded-full border-2 ${game === c.name ? 'border-gold' : 'border-line'}`}>
                 {c.image_url ? (
                   <img src={c.image_url} alt={c.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-panel2 text-[10px] text-mist">Sem foto</div>
                 )}
               </div>
-              <span className="w-16 break-words text-center text-[11px] font-semibold uppercase leading-tight text-ink">{c.name}</span>
+              <span className="w-[52px] break-words text-center text-[11px] font-semibold uppercase leading-tight text-ink">{c.name}</span>
             </button>
           ))}
         </LinhaComSetas>
@@ -154,20 +154,20 @@ export default function Store() {
         <section className="mb-6">
           <LinhaComSetas>
             <button onClick={() => setSubcategoria('todas')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-              <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 text-[10px] font-bold text-mist ${subcategoria === 'todas' ? 'border-emerald' : 'border-line'}`}>
+              <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 text-[10px] font-bold text-mist ${subcategoria === 'todas' ? 'border-emerald' : 'border-line'}`}>
                 Todas
               </div>
             </button>
             {subcategoriasDaCategoria.map((s) => (
               <button key={s.id} onClick={() => setSubcategoria(s.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-                <div className={`h-16 w-16 overflow-hidden rounded-full border-2 ${subcategoria === s.name ? 'border-emerald' : 'border-line'}`}>
+                <div className={`h-[52px] w-[52px] overflow-hidden rounded-full border-2 ${subcategoria === s.name ? 'border-emerald' : 'border-line'}`}>
                   {s.image_url ? (
                     <img src={s.image_url} alt={s.name} className="h-full w-full object-cover" />
                   ) : (
                     <div className="flex h-full w-full items-center justify-center bg-panel2 text-[9px] text-mist">Sem foto</div>
                   )}
                 </div>
-                <span className="max-w-16 text-center text-[11px] font-semibold text-ink">{s.name}</span>
+                <span className="max-w-[52px] text-center text-[11px] font-semibold text-ink">{s.name}</span>
               </button>
             ))}
           </LinhaComSetas>
