@@ -59,7 +59,9 @@ function LinhaComSetas({ children }) {
       <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
         {children}
       </div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white to-transparent" />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex w-10 items-center justify-end bg-gradient-to-l from-white via-white/80 to-transparent pr-0.5">
+        <span className="text-lg text-gold">›</span>
+      </div>
     </div>
   )
 }
