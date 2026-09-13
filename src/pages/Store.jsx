@@ -54,14 +54,8 @@ function FrasesRotativas({ texto }) {
 
 function LinhaComSetas({ children }) {
   return (
-    <div className="relative -mx-4 px-4">
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white to-transparent" />
-      <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
-        {children}
-      </div>
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 flex w-10 items-center justify-end bg-gradient-to-l from-white via-white/80 to-transparent pr-0.5">
-        <span className="text-lg text-gold">›</span>
-      </div>
+    <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+      {children}
     </div>
   )
 }
@@ -136,14 +130,14 @@ export default function Store() {
       <section className="mb-6" id="catalogo">
         <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Categorias</h2>
         <LinhaComSetas>
-          <button onClick={() => mudarCategoria('todos')} className="flex w-14 flex-shrink-0 flex-col items-center gap-1.5">
-            <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-xs font-bold text-mist ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
+          <button onClick={() => mudarCategoria('todos')} className="flex w-16 flex-shrink-0 flex-col items-center gap-1.5">
+            <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 text-xs font-bold text-mist ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
               Todos
             </div>
           </button>
           {categoriasComConta.map((c) => (
-            <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex w-14 flex-shrink-0 flex-col items-center gap-1.5">
-              <div className={`h-14 w-14 overflow-hidden rounded-full border-2 ${game === c.name ? 'border-gold' : 'border-line'}`}>
+            <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex w-16 flex-shrink-0 flex-col items-center gap-1.5">
+              <div className={`h-16 w-16 overflow-hidden rounded-full border-2 ${game === c.name ? 'border-gold' : 'border-line'}`}>
                 {c.image_url ? (
                   <img src={c.image_url} alt={c.name} className="h-full w-full object-cover" />
                 ) : (
@@ -160,13 +154,13 @@ export default function Store() {
         <section className="mb-6">
           <LinhaComSetas>
             <button onClick={() => setSubcategoria('todas')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-              <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-[10px] font-bold text-mist ${subcategoria === 'todas' ? 'border-emerald' : 'border-line'}`}>
+              <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 text-[10px] font-bold text-mist ${subcategoria === 'todas' ? 'border-emerald' : 'border-line'}`}>
                 Todas
               </div>
             </button>
             {subcategoriasDaCategoria.map((s) => (
               <button key={s.id} onClick={() => setSubcategoria(s.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-                <div className={`h-14 w-14 overflow-hidden rounded-full border-2 ${subcategoria === s.name ? 'border-emerald' : 'border-line'}`}>
+                <div className={`h-16 w-16 overflow-hidden rounded-full border-2 ${subcategoria === s.name ? 'border-emerald' : 'border-line'}`}>
                   {s.image_url ? (
                     <img src={s.image_url} alt={s.name} className="h-full w-full object-cover" />
                   ) : (
