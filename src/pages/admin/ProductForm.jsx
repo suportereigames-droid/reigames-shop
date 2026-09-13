@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx'
 
 const BUCKET = 'product-images'
 
-const emptyForm = { game: '', subcategory: '', title: '', description: '', price: '', whatsapp: '', status: 'disponivel' }
+const emptyForm = { game: '', subcategory: '', title: '', description: '', price: '', compare_price: '', whatsapp: '', status: 'disponivel' }
 
 export default function ProductForm() {
   const { id } = useParams()
@@ -118,6 +118,7 @@ export default function ProductForm() {
         title: form.title,
         description: form.description,
         price: Number(form.price),
+        compare_price: form.compare_price ? Number(form.compare_price) : null,
         whatsapp: form.whatsapp,
         status: form.status,
         media: mediaFinal
@@ -183,6 +184,19 @@ export default function ProductForm() {
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
           />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm text-mist">Preço de comparação (opcional)</label>
+          <input
+            type="number" step="0.01" min="0" className="input"
+            value={form.compare_price ?? ''}
+            onChange={(e) => setForm({ ...form, compare_price: e.target.value })}
+            placeholder="Ex: 800.00"
+          />
+          <p className="mt-1 text-xs text-mist">
+            Preço "de", riscado — mostra o desconto (% OFF) no card. Deixe em branco pra não mostrar desconto.
+          </p>
         </div>
 
         <div>

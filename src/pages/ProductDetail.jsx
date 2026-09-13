@@ -15,7 +15,7 @@ export default function ProductDetail() {
       setLoading(true)
       const { data } = await supabase
         .from('products')
-        .select('id, game, title, description, price, media, status')
+        .select('id, game, title, description, price, compare_price, media, status')
         .eq('id', id)
         .single()
       setProduct(data)
@@ -67,6 +67,9 @@ export default function ProductDetail() {
 
       <div className="mt-8 flex items-center justify-between rounded-lg border border-line bg-panel p-6">
         <span className="text-3xl font-bold text-gold">{money(product.price)}</span>
+        {product.compare_price && product.compare_price > product.price && (
+          <span className="ml-2 text-base text-mist line-through">{money(product.compare_price)}</span>
+        )}
         {disponivel ? (
           <Link to={`/checkout/${product.id}`} className="btn-primary">
             Comprar agora
