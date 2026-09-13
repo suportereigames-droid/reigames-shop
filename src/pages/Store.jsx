@@ -92,13 +92,20 @@ export default function Store() {
     load()
   }, [])
 
+  const categoriasComConta = useMemo(
+    () => categorias.filter((c) => products.some((p) => p.game === c.name)),
+    [categorias, products]
+  )
+
   const porCategoria = game === 'todos' ? products : products.filter((p) => p.game === game)
 
   const subcategoriasDaCategoria = useMemo(() => {
     const categoriaAtual = categorias.find((c) => c.name === game)
     if (!categoriaAtual) return []
-    return subcategoriasBanco.filter((s) => s.category_id === categoriaAtual.id)
-  }, [categorias, subcategoriasBanco, game])
+    return subcategoriasBanco.filter(
+      (s) => s.category_id === categoriaAtual.id && porCategoria.some((p) => p.subcategory === s.name)
+    )
+  }, [categorias, subcategoriasBanco, game, porCategoria])
 
   const filtered = subcategoria === 'todas' ? porCategoria : porCategoria.filter((p) => p.subcategory === subcategoria)
 
@@ -120,7 +127,7 @@ export default function Store() {
               Todos
             </div>
           </button>
-          {categorias.map((c) => (
+          {categoriasComConta.map((c) => (
             <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
               <div className={`h-16 w-16 overflow-hidden rounded-full border-2 sm:h-20 sm:w-20 ${game === c.name ? 'border-gold' : 'border-line'}`}>
                 {c.image_url ? (

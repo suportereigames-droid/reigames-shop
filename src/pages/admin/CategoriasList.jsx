@@ -109,21 +109,21 @@ export default function CategoriasList() {
       <div className="mt-6 space-y-3">
         {categorias.map((cat) => (
           <div key={cat.id} className="rounded border border-line">
-            <button
-              onClick={() => setCategoriaAberta(categoriaAberta === cat.id ? null : cat.id)}
-              className="flex w-full items-center justify-between p-3 text-left"
-            >
-              <div className="flex items-center gap-3">
+            <div className="flex w-full items-center justify-between p-3">
+              <button
+                onClick={() => setCategoriaAberta(categoriaAberta === cat.id ? null : cat.id)}
+                className="flex flex-1 items-center gap-3 text-left"
+              >
                 {cat.image_url ? (
                   <img src={cat.image_url} alt="" className="h-10 w-10 rounded-full object-cover" />
                 ) : (
                   <div className="h-10 w-10 rounded-full bg-panel2" />
                 )}
                 <span className="font-semibold text-ink">{cat.name}</span>
-              </div>
+              </button>
               <div className="flex items-center gap-4 text-sm text-mist">
                 <span>{(subcategoriasPorCategoria[cat.id] || []).length} subcategoria(s)</span>
-                <label className="btn-ghost cursor-pointer text-xs" onClick={(e) => e.stopPropagation()}>
+                <label className="btn-ghost cursor-pointer text-xs">
                   Trocar foto
                   <input
                     type="file"
@@ -132,11 +132,11 @@ export default function CategoriasList() {
                     onChange={(e) => enviarImagemCategoria(cat, e.target.files[0])}
                   />
                 </label>
-                <button onClick={(e) => { e.stopPropagation(); excluirCategoria(cat) }} className="text-ember">
+                <button onClick={() => excluirCategoria(cat)} className="text-ember">
                   Apagar
                 </button>
               </div>
-            </button>
+            </div>
 
             {categoriaAberta === cat.id && (
               <div className="border-t border-line p-3">
