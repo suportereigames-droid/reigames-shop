@@ -3,14 +3,14 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
 
-function BannerCarousel({ slides }) {
+function BannerCarousel({ slides, intervalo }) {
   const [indice, setIndice] = useState(0)
 
   useEffect(() => {
     if (slides.length < 2) return
-    const t = setInterval(() => setIndice((i) => (i + 1) % slides.length), 4000)
+    const t = setInterval(() => setIndice((i) => (i + 1) % slides.length), (intervalo || 4) * 1000)
     return () => clearInterval(t)
-  }, [slides.length])
+  }, [slides.length, intervalo])
 
   if (slides.length === 0) return null
 
@@ -69,6 +69,7 @@ export default function Store() {
   const [categorias, setCategorias] = useState([])
   const [subcategoriasBanco, setSubcategoriasBanco] = useState([])
   const [banners, setBanners] = useState([])
+  const [bannerIntervalo, setBannerIntervalo] = useState(4)
   const [frasesRotativas, setFrasesRotativas] = useState('')
   const [frasesVelocidade, setFrasesVelocidade] = useState(20)
   const [parcerias, setParcerias] = useState([])
@@ -84,7 +85,7 @@ export default function Store() {
         supabase.from('categories').select('*').order('sort_order'),
         supabase.from('subcategories').select('*').order('sort_order'),
         supabase.from('banner_slides').select('*').order('sort_order'),
-        supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas').single()
+        supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas, banner_intervalo').single()
       ])
       setProducts(prods || [])
       setCategorias(cats || [])
@@ -92,6 +93,7 @@ export default function Store() {
       setBanners(bnrs || [])
       setFrasesRotativas(settings?.frases_rotativas || '')
       setFrasesVelocidade(settings?.frases_velocidade || 20)
+      setBannerIntervalo(settings?.banner_intervalo || 4)
       setTaxasParcelas(settings?.parcelas_taxas || null)
 
       if (settings?.parcerias_categoria_id) {
@@ -131,7 +133,7 @@ export default function Store() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
-      <BannerCarousel slides={banners} />
+      <BannerCarousel slides={banners} intervalo={bannerIntervalo} />
       <FrasesRotativas texto={frasesRotativas} velocidade={frasesVelocidade} />
 
       <section className="mb-6" id="catalogo">

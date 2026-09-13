@@ -6,6 +6,7 @@ export default function BannerList() {
   const [categoriasPagina, setCategoriasPagina] = useState([])
   const [frases, setFrases] = useState('')
   const [frasesVelocidade, setFrasesVelocidade] = useState(20)
+  const [bannerIntervalo, setBannerIntervalo] = useState(4)
   const [parceriasCategoriaId, setParceriasCategoriaId] = useState(null)
   const [taxas, setTaxas] = useState({})
   const [salvando, setSalvando] = useState(false)
@@ -15,12 +16,13 @@ export default function BannerList() {
     const [{ data: bnrs }, { data: cats }, { data: settings }] = await Promise.all([
       supabase.from('banner_slides').select('*').order('sort_order'),
       supabase.from('page_categories').select('*').order('sort_order'),
-      supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas').single()
+      supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas, banner_intervalo').single()
     ])
     setBanners(bnrs || [])
     setCategoriasPagina(cats || [])
     setFrases(settings?.frases_rotativas || '')
     setFrasesVelocidade(settings?.frases_velocidade || 20)
+    setBannerIntervalo(settings?.banner_intervalo || 4)
     setParceriasCategoriaId(settings?.parcerias_categoria_id || null)
     setTaxas(settings?.parcelas_taxas || {})
   }
@@ -67,6 +69,7 @@ export default function BannerList() {
       .update({
         frases_rotativas: frases || null,
         frases_velocidade: Number(frasesVelocidade) || 20,
+        banner_intervalo: Number(bannerIntervalo) || 4,
         parcerias_categoria_id: parceriasCategoriaId,
         parcelas_taxas: taxas
       })
@@ -108,6 +111,13 @@ export default function BannerList() {
         <input type="file" accept="image/*" className="sr-only" onChange={(e) => adicionarBanner(e.target.files[0])} />
       </label>
       {error && <p className="mt-2 text-sm text-ember">{error}</p>}
+
+      <label className="mb-1 mt-4 block text-xs text-mist">Tempo pra trocar de banner (segundos)</label>
+      <input
+        type="number" min="2" max="30" className="input max-w-[160px]"
+        value={bannerIntervalo}
+        onChange={(e) => setBannerIntervalo(e.target.value)}
+      />
 
       <h2 className="mt-8 font-semibold text-ink">Frases rotativas</h2>
       <p className="text-sm text-mist">Uma frase por linha — ficam girando embaixo do banner, na home.</p>
