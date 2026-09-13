@@ -33,16 +33,16 @@ function BannerCarousel({ slides }) {
   )
 }
 
-function FrasesRotativas({ texto }) {
+function FrasesRotativas({ texto, velocidade }) {
   const frases = useMemo(() => (texto || '').split('\n').map((f) => f.trim()).filter(Boolean), [texto])
 
   if (frases.length === 0) return null
 
   return (
-    <div className="mb-6 overflow-hidden rounded bg-panel py-2.5">
+    <div className="mb-6 overflow-hidden bg-white py-2.5">
       <div
         className="flex whitespace-nowrap"
-        style={{ animation: `rolar-esquerda ${Math.max(frases.length * 6, 15)}s linear infinite` }}
+        style={{ animation: `rolar-esquerda ${velocidade || 20}s linear infinite` }}
       >
         {[...frases, ...frases].map((frase, i) => (
           <span key={i} className="flex items-center text-sm font-medium text-ink">
@@ -70,6 +70,7 @@ export default function Store() {
   const [subcategoriasBanco, setSubcategoriasBanco] = useState([])
   const [banners, setBanners] = useState([])
   const [frasesRotativas, setFrasesRotativas] = useState('')
+  const [frasesVelocidade, setFrasesVelocidade] = useState(20)
   const [parcerias, setParcerias] = useState([])
   const [taxasParcelas, setTaxasParcelas] = useState(null)
   const [game, setGame] = useState('todos')
@@ -83,13 +84,14 @@ export default function Store() {
         supabase.from('categories').select('*').order('sort_order'),
         supabase.from('subcategories').select('*').order('sort_order'),
         supabase.from('banner_slides').select('*').order('sort_order'),
-        supabase.from('site_settings').select('frases_rotativas, parcerias_categoria_id, parcelas_taxas').single()
+        supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas').single()
       ])
       setProducts(prods || [])
       setCategorias(cats || [])
       setSubcategoriasBanco(subs || [])
       setBanners(bnrs || [])
       setFrasesRotativas(settings?.frases_rotativas || '')
+      setFrasesVelocidade(settings?.frases_velocidade || 20)
       setTaxasParcelas(settings?.parcelas_taxas || null)
 
       if (settings?.parcerias_categoria_id) {
@@ -130,7 +132,7 @@ export default function Store() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-6 sm:py-10">
       <BannerCarousel slides={banners} />
-      <FrasesRotativas texto={frasesRotativas} />
+      <FrasesRotativas texto={frasesRotativas} velocidade={frasesVelocidade} />
 
       <section className="mb-6" id="catalogo">
         <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Categorias</h2>

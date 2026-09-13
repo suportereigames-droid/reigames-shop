@@ -5,6 +5,7 @@ export default function BannerList() {
   const [banners, setBanners] = useState([])
   const [categoriasPagina, setCategoriasPagina] = useState([])
   const [frases, setFrases] = useState('')
+  const [frasesVelocidade, setFrasesVelocidade] = useState(20)
   const [parceriasCategoriaId, setParceriasCategoriaId] = useState(null)
   const [taxas, setTaxas] = useState({})
   const [salvando, setSalvando] = useState(false)
@@ -14,11 +15,12 @@ export default function BannerList() {
     const [{ data: bnrs }, { data: cats }, { data: settings }] = await Promise.all([
       supabase.from('banner_slides').select('*').order('sort_order'),
       supabase.from('page_categories').select('*').order('sort_order'),
-      supabase.from('site_settings').select('frases_rotativas, parcerias_categoria_id, parcelas_taxas').single()
+      supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas').single()
     ])
     setBanners(bnrs || [])
     setCategoriasPagina(cats || [])
     setFrases(settings?.frases_rotativas || '')
+    setFrasesVelocidade(settings?.frases_velocidade || 20)
     setParceriasCategoriaId(settings?.parcerias_categoria_id || null)
     setTaxas(settings?.parcelas_taxas || {})
   }
@@ -64,6 +66,7 @@ export default function BannerList() {
       .from('site_settings')
       .update({
         frases_rotativas: frases || null,
+        frases_velocidade: Number(frasesVelocidade) || 20,
         parcerias_categoria_id: parceriasCategoriaId,
         parcelas_taxas: taxas
       })
@@ -114,6 +117,14 @@ export default function BannerList() {
         onChange={(e) => setFrases(e.target.value)}
         placeholder={'REI GAMES 🎮\nCompra 100% segura'}
       />
+
+      <label className="mb-1 mt-3 block text-xs text-mist">Velocidade da rolagem (segundos por volta completa)</label>
+      <input
+        type="number" min="5" max="60" className="input max-w-[160px]"
+        value={frasesVelocidade}
+        onChange={(e) => setFrasesVelocidade(e.target.value)}
+      />
+      <p className="mt-1 text-xs text-mist">Número menor = mais rápido. Número maior = mais devagar.</p>
 
       <h2 className="mt-8 font-semibold text-ink">Seção "Parcerias" na home</h2>
       <p className="text-sm text-mist">
