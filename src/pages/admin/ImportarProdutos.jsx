@@ -9,6 +9,17 @@ function removerHtml(html) {
   return div.textContent || div.innerText || ''
 }
 
+function mapearStatus(statusShopify, publicado) {
+  const s = (statusShopify || '').toLowerCase().trim()
+  if (s === 'active') return 'disponivel'
+  if (s === 'draft' || s === 'archived') return 'oculto'
+  // Se não tiver a coluna "Status", usa "Published" (TRUE/FALSE) como respaldo.
+  if (publicado !== undefined) {
+    return String(publicado).toLowerCase() === 'true' ? 'disponivel' : 'oculto'
+  }
+  return 'disponivel'
+}
+
 function agruparPorHandle(linhas) {
   const grupos = {}
   const ordem = []
@@ -16,7 +27,7 @@ function agruparPorHandle(linhas) {
     const handle = linha['Handle']
     if (!handle) continue
     if (!grupos[handle]) {
-      grupos[handle] = { handle, title: '', body: '', price: null, compareAt: null, images: [] }
+      grupos[handle] = { handle, title: '', body: '', price: null, compareAt: null, images: [], status: null }
       ordem.push(handle)
     }
     const g = grupos[handle]
@@ -25,6 +36,7 @@ function agruparPorHandle(linhas) {
     if (linha['Variant Price'] && !g.price) g.price = linha['Variant Price']
     if (linha['Variant Compare At Price'] && !g.compareAt) g.compareAt = linha['Variant Compare At Price']
     if (linha['Image Src']) g.images.push(linha['Image Src'])
+    if (linha['Status'] || linha['Published']) g.status = mapearStatus(linha['Status'], linha['Published'])
   }
   return ordem.map((h) => grupos[h]).filter((g) => g.title)
 }
@@ -82,7 +94,7 @@ export default function ImportarProdutos() {
         description: removerHtml(p.body).trim(),
         price: p.price ? Number(p.price) : 0,
         compare_price: p.compareAt ? Number(p.compareAt) : null,
-        status: 'disponivel',
+        status: p.status || 'disponivel',
         media: p.images.map((url) => ({ type: 'image', path: url, url })),
         created_by: user.id
       }
@@ -138,7 +150,7 @@ export default function ImportarProdutos() {
                 <div>
                   <p className="font-medium text-ink">{p.title}</p>
                   <p className="text-xs text-mist">
-                    {p.price ? `R$ ${p.price}` : 'sem preço'} · {p.images.length} imagem(ns)
+                    {p.price ? `R$ ${p.price}` : 'sem preço'} · {p.images.length} imagem(ns) · {p.status || 'disponivel'}
                   </p>
                 </div>
                 {p.images[0] && <img src={p.images[0]} alt="" className="h-12 w-12 rounded object-cover" />}
