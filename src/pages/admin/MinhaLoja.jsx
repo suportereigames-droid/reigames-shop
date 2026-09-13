@@ -165,7 +165,7 @@ export default function MinhaLoja() {
               onChange={(e) => setForm({ ...form, frases: e.target.value })}
               placeholder={'Entrega rápida\nContas com garantia'}
             />
-            <p className="mt-1 text-xs text-mist">Uma frase por linha — ficam girando do lado da logo.</p>
+            <p className="mt-1 text-xs text-mist">Uma frase por linha — aparecem do lado da logo.</p>
           </div>
 
           <div>

@@ -1,25 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
-
-function FrasesLoja({ texto }) {
-  const frases = useMemo(() => (texto || '').split('\n').map((f) => f.trim()).filter(Boolean), [texto])
-  if (frases.length === 0) return null
-
-  return (
-    <div className="max-w-full overflow-hidden">
-      <div className="flex whitespace-nowrap" style={{ animation: 'rolar-esquerda 18s linear infinite' }}>
-        {[...frases, ...frases].map((frase, i) => (
-          <span key={i} className="flex items-center text-sm font-medium text-ink">
-            {frase}
-            <span className="mx-3 font-bold text-gold">|</span>
-          </span>
-        ))}
-      </div>
-    </div>
-  )
-}
 
 export default function SellerPage() {
   const { slug } = useParams()
@@ -70,8 +52,20 @@ export default function SellerPage() {
 
       {(pagina.logo_url || pagina.frases) && (
         <div className="mt-4 flex flex-wrap items-center gap-4">
-          {pagina.logo_url && <img src={pagina.logo_url} alt={pagina.titulo || pagina.display_name} className="h-14 w-auto" />}
-          {pagina.frases && <FrasesLoja texto={pagina.frases} />}
+          {pagina.logo_url && (
+            <img
+              src={pagina.logo_url}
+              alt={pagina.titulo || pagina.display_name}
+              className="h-20 w-20 flex-shrink-0 rounded-full border border-line object-cover"
+            />
+          )}
+          {pagina.frases && (
+            <div className="text-sm font-medium text-ink">
+              {pagina.frases.split('\n').map((f) => f.trim()).filter(Boolean).map((frase, i) => (
+                <p key={i}>{frase}</p>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
