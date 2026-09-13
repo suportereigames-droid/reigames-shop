@@ -6,7 +6,9 @@ export default function StoreLayout() {
   const location = useLocation()
   const [logoUrl, setLogoUrl] = useState(null)
   const [itensMenu, setItensMenu] = useState([])
+  const [todasPaginas, setTodasPaginas] = useState([])
   const [menuAberto, setMenuAberto] = useState(false)
+  const [categoriaAberta, setCategoriaAberta] = useState(null)
   const [config, setConfig] = useState({ instagram_url: null, whatsapp_numero: null, rodape_texto: null })
 
   useEffect(() => {
@@ -40,6 +42,7 @@ export default function StoreLayout() {
       const contato = data?.[0]
       if (contato) setConfig((c) => ({ ...c, whatsapp_numero: contato.whatsapp, instagram_url: contato.instagram_url }))
     })
+    supabase.from('site_pages').select('id, slug, menu_label, page_category_id').then(({ data }) => setTodasPaginas(data || []))
     supabase
       .from('menu_items')
       .select('*, site_pages(slug, menu_label), page_categories(id, name, slug)')
@@ -51,6 +54,8 @@ export default function StoreLayout() {
     // Fecha o menu sempre que navegar pra outra página
     setMenuAberto(false)
   }, [location.pathname])
+
+  const paginasPorCategoria = (categoriaId) => todasPaginas.filter((p) => p.page_category_id === categoriaId)
 
   return (
     <div className="min-h-screen bg-white">
@@ -117,14 +122,31 @@ export default function StoreLayout() {
 
                 // tipo === 'categoria'
                 if (!item.page_categories) return null
+                const filhas = paginasPorCategoria(item.page_categories.id)
                 return (
-                  <Link
-                    key={item.id}
-                    to={`/categoria/${item.page_categories.slug}`}
-                    className="block px-4 py-2 text-sm font-semibold text-ink hover:bg-panel"
-                  >
-                    {item.page_categories.name}
-                  </Link>
+                  <div key={item.id}>
+                    <button
+                      onClick={() => setCategoriaAberta(categoriaAberta === item.id ? null : item.id)}
+                      className="flex w-full items-center justify-between px-4 py-2 text-left text-sm font-semibold text-ink hover:bg-panel"
+                    >
+                      {item.page_categories.name}
+                      <span className="text-mist">{categoriaAberta === item.id ? '−' : '+'}</span>
+                    </button>
+                    {categoriaAberta === item.id && (
+                      <div className="bg-panel/60 pb-1">
+                        {filhas.length === 0 && <p className="px-8 py-2 text-xs text-mist">Nenhuma página aqui ainda.</p>}
+                        {filhas.map((p) => (
+                          <Link
+                            key={p.slug}
+                            to={`/pagina/${p.slug}`}
+                            className="block px-8 py-2 text-sm text-mist hover:text-ink"
+                          >
+                            {p.menu_label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                 )
               })}
             </div>

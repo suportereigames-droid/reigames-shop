@@ -9,7 +9,7 @@ export default function PaginaForm() {
 
   const [categoriasPagina, setCategoriasPagina] = useState([])
   const [novaCategoria, setNovaCategoria] = useState('')
-  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null, image_url: null })
+  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null, image_url: null, gallery_category_id: null })
   const [loading, setLoading] = useState(isEditing)
   const [saving, setSaving] = useState(false)
   const [enviandoImagem, setEnviandoImagem] = useState(false)
@@ -52,7 +52,7 @@ export default function PaginaForm() {
       const { data } = supabase.storage.from('product-images').getPublicUrl(path)
       setForm((f) => ({ ...f, image_url: data.publicUrl }))
     } catch (err) {
-      setError('Não foi possível enviar a imagem.')
+      setError(err.message || 'Não foi possível enviar a imagem.')
     } finally {
       setEnviandoImagem(false)
     }
@@ -146,7 +146,15 @@ export default function PaginaForm() {
               <div className="flex items-center gap-3">
                 <label className="btn-ghost inline-block cursor-pointer text-sm">
                   {enviandoImagem ? 'Enviando...' : 'Trocar imagem'}
-                  <input type="file" accept="image/*" onChange={(e) => enviarImagem(e.target.files[0])} className="hidden" />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      alert('Evento disparado! Arquivo: ' + (e.target.files[0]?.name || 'NENHUM ARQUIVO'))
+                      enviarImagem(e.target.files[0])
+                    }}
+                    className="sr-only"
+                  />
                 </label>
                 <button
                   type="button"
@@ -161,9 +169,38 @@ export default function PaginaForm() {
           ) : (
             <label className="btn-ghost inline-block cursor-pointer">
               {enviandoImagem ? 'Enviando...' : 'Escolher imagem'}
-              <input type="file" accept="image/*" onChange={(e) => enviarImagem(e.target.files[0])} className="hidden" />
+              <input
+                type="file"
+                accept="image/*"
+                onChange={(e) => {
+                  alert('Evento disparado! Arquivo: ' + (e.target.files[0]?.name || 'NENHUM ARQUIVO'))
+                  enviarImagem(e.target.files[0])
+                }}
+                className="sr-only"
+              />
             </label>
           )}
+          {error && <p className="mt-2 text-sm text-ember">{error}</p>}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm text-mist">
+            Esta página mostra a galeria de imagens de uma categoria? (opcional)
+          </label>
+          <select
+            className="input"
+            value={form.gallery_category_id || ''}
+            onChange={(e) => setForm({ ...form, gallery_category_id: e.target.value || null })}
+          >
+            <option value="">Não — é uma página de código normal</option>
+            {categoriasPagina.map((c) => (
+              <option key={c.id} value={c.id}>Sim — galeria de "{c.name}"</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-mist">
+            Se escolher uma categoria aqui, essa página mostra sozinha a imagem + nome de cada página
+            que estiver dentro dela — o código HTML abaixo é ignorado nesse caso.
+          </p>
         </div>
 
         <div>
