@@ -63,6 +63,7 @@ export default function ProductList() {
           <table className="w-full text-left text-sm">
             <thead className="bg-panel2 text-mist">
               <tr>
+                <th className="px-4 py-3"></th>
                 <th className="px-4 py-3">Jogo</th>
                 <th className="px-4 py-3">Título</th>
                 <th className="px-4 py-3">Preço</th>
@@ -72,19 +73,33 @@ export default function ProductList() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => (
-                <tr key={p.id} className="border-t border-line">
-                  <td className="px-4 py-3 text-ink">{p.game}</td>
-                  <td className="px-4 py-3 text-ink">{p.title}</td>
-                  <td className="px-4 py-3 text-gold">{money(p.price)}</td>
-                  <td className={`px-4 py-3 ${STATUS_LABEL[p.status]?.cor}`}>{STATUS_LABEL[p.status]?.texto}</td>
-                  {isAdmin && <td className="px-4 py-3 text-mist">{p.profiles?.full_name}</td>}
-                  <td className="px-4 py-3 text-right">
-                    <Link to={`/admin/produtos/${p.id}`} className="mr-3 text-gold hover:underline">Editar</Link>
-                    <button onClick={() => handleDelete(p)} className="text-ember hover:underline">Excluir</button>
-                  </td>
-                </tr>
-              ))}
+              {products.map((p) => {
+                const capa = p.media?.[0]
+                return (
+                  <tr key={p.id} className="border-t border-line">
+                    <td className="px-4 py-3">
+                      {capa ? (
+                        capa.type === 'video' ? (
+                          <video src={capa.url} muted className="h-12 w-12 rounded object-cover" />
+                        ) : (
+                          <img src={capa.url} alt="" className="h-12 w-12 rounded object-cover" />
+                        )
+                      ) : (
+                        <div className="h-12 w-12 rounded bg-panel2" />
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-ink">{p.game}</td>
+                    <td className="px-4 py-3 text-ink">{p.title}</td>
+                    <td className="px-4 py-3 text-gold">{money(p.price)}</td>
+                    <td className={`px-4 py-3 ${STATUS_LABEL[p.status]?.cor}`}>{STATUS_LABEL[p.status]?.texto}</td>
+                    {isAdmin && <td className="px-4 py-3 text-mist">{p.profiles?.full_name}</td>}
+                    <td className="px-4 py-3 text-right">
+                      <Link to={`/admin/produtos/${p.id}`} className="mr-3 text-gold hover:underline">Editar</Link>
+                      <button onClick={() => handleDelete(p)} className="text-ember hover:underline">Excluir</button>
+                    </td>
+                  </tr>
+                )
+              })}
             </tbody>
           </table>
         </div>
