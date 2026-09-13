@@ -59,11 +59,11 @@ export default function StoreLayout() {
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="relative border-b border-ink bg-ink">
+      <header className="relative border-b border-line" style={{ backgroundColor: '#3B82D9' }}>
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4">
           <button
             onClick={() => setMenuAberto((v) => !v)}
-            className="flex h-9 w-9 items-center justify-center rounded border border-gold/40 text-gold"
+            className="flex h-9 w-9 items-center justify-center rounded border border-white/40 text-white"
             aria-label="Abrir menu"
           >
             <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
@@ -82,8 +82,8 @@ export default function StoreLayout() {
             )}
           </Link>
 
-          <nav className="ml-auto text-sm text-mist">
-            <Link to="/minha-conta" className="hover:text-gold">Minha conta</Link>
+          <nav className="ml-auto text-sm text-white/80">
+            <Link to="/minha-conta" className="hover:text-white">Minha conta</Link>
           </nav>
         </div>
 
