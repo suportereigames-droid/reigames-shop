@@ -134,13 +134,13 @@ export default function Store() {
       <section className="mb-6" id="catalogo">
         <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Categorias</h2>
         <LinhaComSetas>
-          <button onClick={() => mudarCategoria('todos')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
+          <button onClick={() => mudarCategoria('todos')} className="flex w-14 flex-shrink-0 flex-col items-center gap-1.5">
             <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-xs font-bold text-mist ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
               Todos
             </div>
           </button>
           {categoriasComConta.map((c) => (
-            <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
+            <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex w-14 flex-shrink-0 flex-col items-center gap-1.5">
               <div className={`h-14 w-14 overflow-hidden rounded-full border-2 ${game === c.name ? 'border-gold' : 'border-line'}`}>
                 {c.image_url ? (
                   <img src={c.image_url} alt={c.name} className="h-full w-full object-cover" />
@@ -148,7 +148,7 @@ export default function Store() {
                   <div className="flex h-full w-full items-center justify-center bg-panel2 text-[10px] text-mist">Sem foto</div>
                 )}
               </div>
-              <span className="max-w-16 text-center text-[11px] font-semibold uppercase text-ink">{c.name}</span>
+              <span className="w-16 break-words text-center text-[11px] font-semibold uppercase leading-tight text-ink">{c.name}</span>
             </button>
           ))}
         </LinhaComSetas>
