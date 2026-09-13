@@ -121,19 +121,9 @@ export default function PaginaForm() {
             ))}
           </select>
           <p className="mt-1 text-xs text-mist">
-            Páginas na mesma categoria ficam agrupadas dentro de uma "pastinha" no menu do site.
+            Páginas na mesma categoria ficam agrupadas dentro de uma "pastinha" no menu do site. Categorias
+            novas você cria em <a href="/admin/categorias-pagina" className="underline">Categorias de página</a>.
           </p>
-          <div className="mt-2 flex gap-2">
-            <input
-              className="input"
-              value={novaCategoria}
-              onChange={(e) => setNovaCategoria(e.target.value)}
-              placeholder="Criar categoria nova (ex: Grupos WhatsApp)"
-            />
-            <button type="button" onClick={criarCategoria} className="btn-ghost whitespace-nowrap">
-              + Criar
-            </button>
-          </div>
         </div>
 
         <div>
