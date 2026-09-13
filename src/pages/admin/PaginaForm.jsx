@@ -9,9 +9,10 @@ export default function PaginaForm() {
 
   const [categoriasPagina, setCategoriasPagina] = useState([])
   const [novaCategoria, setNovaCategoria] = useState('')
-  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null })
+  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null, image_url: null })
   const [loading, setLoading] = useState(isEditing)
   const [saving, setSaving] = useState(false)
+  const [enviandoImagem, setEnviandoImagem] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -38,6 +39,23 @@ export default function PaginaForm() {
     setCategoriasPagina((c) => [...c, data])
     setForm((f) => ({ ...f, page_category_id: data.id }))
     setNovaCategoria('')
+  }
+
+  async function enviarImagem(file) {
+    if (!file) return
+    setEnviandoImagem(true)
+    setError('')
+    try {
+      const path = `paginas/${Date.now()}-${file.name}`
+      const { error: uploadError } = await supabase.storage.from('product-images').upload(path, file)
+      if (uploadError) throw uploadError
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path)
+      setForm((f) => ({ ...f, image_url: data.publicUrl }))
+    } catch (err) {
+      setError('Não foi possível enviar a imagem.')
+    } finally {
+      setEnviandoImagem(false)
+    }
   }
 
   function gerarSlugValido(texto) {
@@ -115,6 +133,17 @@ export default function PaginaForm() {
             Só agrupa visualmente; pra aparecer no menu do site, adicione essa página (ou a categoria) em{' '}
             <a href="/admin/menu" className="underline">Menu do site</a>.
           </p>
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm text-mist">
+            Imagem da página <span className="text-xs">(usada na galeria da categoria, se ela estiver numa)</span>
+          </label>
+          {form.image_url && (
+            <img src={form.image_url} alt="" className="mb-2 h-32 w-full rounded object-cover" />
+          )}
+          <input type="file" accept="image/*" onChange={(e) => enviarImagem(e.target.files[0])} className="text-sm text-mist" />
+          {enviandoImagem && <p className="mt-1 text-xs text-mist">Enviando...</p>}
         </div>
 
         <div>
