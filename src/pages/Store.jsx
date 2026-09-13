@@ -35,19 +35,22 @@ function BannerCarousel({ slides }) {
 
 function FrasesRotativas({ texto }) {
   const frases = useMemo(() => (texto || '').split('\n').map((f) => f.trim()).filter(Boolean), [texto])
-  const [indice, setIndice] = useState(0)
-
-  useEffect(() => {
-    if (frases.length < 2) return
-    const t = setInterval(() => setIndice((i) => (i + 1) % frases.length), 3000)
-    return () => clearInterval(t)
-  }, [frases.length])
 
   if (frases.length === 0) return null
 
   return (
-    <div className="mb-6 rounded bg-panel px-4 py-2 text-center text-sm font-medium text-ink">
-      {frases[indice]}
+    <div className="mb-6 overflow-hidden rounded bg-panel py-2.5">
+      <div
+        className="flex whitespace-nowrap"
+        style={{ animation: `rolar-esquerda ${Math.max(frases.length * 6, 15)}s linear infinite` }}
+      >
+        {[...frases, ...frases].map((frase, i) => (
+          <span key={i} className="flex items-center text-sm font-medium text-ink">
+            {frase}
+            <span className="mx-3 font-bold text-gold">|</span>
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
