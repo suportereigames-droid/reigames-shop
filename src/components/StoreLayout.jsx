@@ -51,6 +51,7 @@ export default function StoreLayout() {
     supabase
       .from('page_categories')
       .select('*')
+      .eq('show_in_menu', true)
       .order('sort_order', { ascending: true })
       .then(({ data }) => setCategoriasPagina(data || []))
   }, [])

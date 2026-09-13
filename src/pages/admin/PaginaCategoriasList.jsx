@@ -26,6 +26,11 @@ export default function PaginaCategoriasList() {
     load()
   }
 
+  async function alternarVisibilidade(categoria) {
+    await supabase.from('page_categories').update({ show_in_menu: !categoria.show_in_menu }).eq('id', categoria.id)
+    load()
+  }
+
   async function excluir(categoria) {
     if (!confirm(`Apagar "${categoria.name}"? As páginas dela voltam a ficar avulsas no menu.`)) return
     await supabase.from('page_categories').delete().eq('id', categoria.id)
@@ -55,7 +60,13 @@ export default function PaginaCategoriasList() {
         {categorias.map((c) => (
           <div key={c.id} className="flex items-center justify-between rounded border border-line p-3">
             <span className="text-ink">{c.name}</span>
-            <button onClick={() => excluir(c)} className="text-sm text-ember">Excluir</button>
+            <div className="flex items-center gap-4">
+              <label className="flex items-center gap-2 text-sm text-mist">
+                <input type="checkbox" checked={c.show_in_menu} onChange={() => alternarVisibilidade(c)} />
+                No menu
+              </label>
+              <button onClick={() => excluir(c)} className="text-sm text-ember">Excluir</button>
+            </div>
           </div>
         ))}
       </div>
