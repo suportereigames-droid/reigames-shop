@@ -74,7 +74,6 @@ export default function ProductDetail() {
   const [ativo, setAtivo] = useState(0)
   const [mostrarPagamento, setMostrarPagamento] = useState(false)
   const [mostrarZoom, setMostrarZoom] = useState(false)
-  const [descricaoAberta, setDescricaoAberta] = useState(false)
   const [whatsappDono, setWhatsappDono] = useState(null)
   const [taxas, setTaxas] = useState({ 1: 0 })
 
@@ -221,14 +220,7 @@ export default function ProductDetail() {
 
       <div className="mt-8 border-t border-line pt-6">
         <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-ink">Descrição da conta</h2>
-        <p className={`whitespace-pre-line text-sm text-mist ${!descricaoAberta && 'line-clamp-6'}`}>
-          {product.description}
-        </p>
-        {product.description?.length > 300 && (
-          <button onClick={() => setDescricaoAberta((v) => !v)} className="mt-2 text-xs font-semibold text-gold">
-            {descricaoAberta ? 'Ver menos' : 'Ver descrição completa'}
-          </button>
-        )}
+        <p className="whitespace-pre-line text-sm text-mist">{product.description}</p>
       </div>
 
       {mostrarPagamento && (
