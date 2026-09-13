@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
@@ -48,6 +48,34 @@ function FrasesRotativas({ texto }) {
   return (
     <div className="mb-6 rounded bg-panel px-4 py-2 text-center text-sm font-medium text-ink">
       {frases[indice]}
+    </div>
+  )
+}
+
+function LinhaComSetas({ children }) {
+  const ref = useRef(null)
+  function rolar(distancia) {
+    ref.current?.scrollBy({ left: distancia, behavior: 'smooth' })
+  }
+  return (
+    <div className="relative">
+      <button
+        onClick={() => rolar(-220)}
+        className="absolute left-0 top-1/3 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-white text-ink shadow"
+        aria-label="Voltar"
+      >
+        ‹
+      </button>
+      <div ref={ref} className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+        {children}
+      </div>
+      <button
+        onClick={() => rolar(220)}
+        className="absolute right-0 top-1/3 z-10 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-line bg-white text-ink shadow"
+        aria-label="Avançar"
+      >
+        ›
+      </button>
     </div>
   )
 }
@@ -121,30 +149,30 @@ export default function Store() {
 
       <section className="mb-6" id="catalogo">
         <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Categorias</h2>
-        <div className="flex gap-4 overflow-x-auto pb-2">
+        <LinhaComSetas>
           <button onClick={() => mudarCategoria('todos')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-            <div className={`flex h-16 w-16 items-center justify-center rounded-full border-2 text-xs font-bold text-mist sm:h-20 sm:w-20 ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
+            <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-xs font-bold text-mist sm:h-20 sm:w-20 ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
               Todos
             </div>
           </button>
           {categoriasComConta.map((c) => (
             <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-              <div className={`h-16 w-16 overflow-hidden rounded-full border-2 sm:h-20 sm:w-20 ${game === c.name ? 'border-gold' : 'border-line'}`}>
+              <div className={`h-14 w-14 overflow-hidden rounded-full border-2 sm:h-20 sm:w-20 ${game === c.name ? 'border-gold' : 'border-line'}`}>
                 {c.image_url ? (
                   <img src={c.image_url} alt={c.name} className="h-full w-full object-cover" />
                 ) : (
                   <div className="flex h-full w-full items-center justify-center bg-panel2 text-[10px] text-mist">Sem foto</div>
                 )}
               </div>
-              <span className="max-w-20 text-center text-xs font-semibold uppercase text-ink">{c.name}</span>
+              <span className="max-w-16 text-center text-[11px] font-semibold uppercase text-ink">{c.name}</span>
             </button>
           ))}
-        </div>
+        </LinhaComSetas>
       </section>
 
       {game !== 'todos' && subcategoriasDaCategoria.length > 0 && (
         <section className="mb-6">
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <LinhaComSetas>
             <button onClick={() => setSubcategoria('todas')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
               <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-[10px] font-bold text-mist ${subcategoria === 'todas' ? 'border-emerald' : 'border-line'}`}>
                 Todas
@@ -162,14 +190,14 @@ export default function Store() {
                 <span className="max-w-16 text-center text-[11px] font-semibold text-ink">{s.name}</span>
               </button>
             ))}
-          </div>
+          </LinhaComSetas>
         </section>
       )}
 
       {parcerias.length > 0 && (
         <section className="mb-8">
           <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Parcerias</h2>
-          <div className="flex gap-4 overflow-x-auto pb-2">
+          <LinhaComSetas>
             {parcerias.map((p) => (
               <Link key={p.slug} to={`/pagina/${p.slug}`} className="flex flex-shrink-0 flex-col items-center gap-1.5">
                 <div className="h-16 w-16 overflow-hidden rounded-full border-2 border-line sm:h-20 sm:w-20">
@@ -182,7 +210,7 @@ export default function Store() {
                 <span className="max-w-20 text-center text-xs font-semibold text-ink">{p.menu_label}</span>
               </Link>
             ))}
-          </div>
+          </LinhaComSetas>
         </section>
       )}
 
