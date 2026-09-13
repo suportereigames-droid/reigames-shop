@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
@@ -53,29 +53,13 @@ function FrasesRotativas({ texto }) {
 }
 
 function LinhaComSetas({ children }) {
-  const ref = useRef(null)
-  function rolar(distancia) {
-    ref.current?.scrollBy({ left: distancia, behavior: 'smooth' })
-  }
   return (
-    <div className="relative">
-      <button
-        onClick={() => rolar(-220)}
-        className="absolute left-0 top-1/3 z-10 flex h-8 w-8 -translate-x-1/2 items-center justify-center rounded-full border border-line bg-white text-ink shadow"
-        aria-label="Voltar"
-      >
-        ‹
-      </button>
-      <div ref={ref} className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
+    <div className="relative -mx-4 px-4">
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-6 bg-gradient-to-r from-white to-transparent" />
+      <div className="flex gap-3 overflow-x-auto pb-2 scroll-smooth" style={{ WebkitOverflowScrolling: 'touch', scrollbarWidth: 'none' }}>
         {children}
       </div>
-      <button
-        onClick={() => rolar(220)}
-        className="absolute right-0 top-1/3 z-10 flex h-8 w-8 translate-x-1/2 items-center justify-center rounded-full border border-line bg-white text-ink shadow"
-        aria-label="Avançar"
-      >
-        ›
-      </button>
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-6 bg-gradient-to-l from-white to-transparent" />
     </div>
   )
 }
