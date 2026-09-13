@@ -6,9 +6,10 @@ export default function MinhaLoja() {
   const { user, profile, isAdmin } = useAuth()
   const [membros, setMembros] = useState([])
   const [alvoId, setAlvoId] = useState(user?.id)
-  const [form, setForm] = useState({ slug: '', display_name: '', whatsapp: '', banner_text: '', banner_video_url: '' })
+  const [form, setForm] = useState({ slug: '', display_name: '', titulo: '', logo_url: '', frases: '', banner_text: '', banner_video_url: '' })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [enviandoLogo, setEnviandoLogo] = useState(false)
   const [error, setError] = useState('')
   const [salvo, setSalvo] = useState(false)
 
@@ -32,17 +33,36 @@ export default function MinhaLoja() {
           setForm({
             slug: data.slug,
             display_name: data.display_name,
-            whatsapp: data.whatsapp || '',
+            titulo: data.titulo || '',
+            logo_url: data.logo_url || '',
+            frases: data.frases || '',
             banner_text: data.banner_text || '',
             banner_video_url: data.banner_video_url || ''
           })
         } else {
           const nome = alvoId === user?.id ? profile?.full_name || '' : membros.find((m) => m.id === alvoId)?.full_name || ''
-          setForm({ slug: '', display_name: nome, whatsapp: '', banner_text: '', banner_video_url: '' })
+          setForm({ slug: '', display_name: nome, titulo: '', logo_url: '', frases: '', banner_text: '', banner_video_url: '' })
         }
         setLoading(false)
       })
   }, [alvoId])
+
+  async function enviarLogo(file) {
+    if (!file) return
+    setEnviandoLogo(true)
+    setError('')
+    try {
+      const path = `lojas/${alvoId}-${Date.now()}-${file.name}`
+      const { error: uploadError } = await supabase.storage.from('product-images').upload(path, file)
+      if (uploadError) throw uploadError
+      const { data } = supabase.storage.from('product-images').getPublicUrl(path)
+      setForm((f) => ({ ...f, logo_url: data.publicUrl }))
+    } catch (err) {
+      setError(err.message || 'Não foi possível enviar a logo.')
+    } finally {
+      setEnviandoLogo(false)
+    }
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -54,7 +74,9 @@ export default function MinhaLoja() {
       seller_id: alvoId,
       slug: slugLimpo,
       display_name: form.display_name,
-      whatsapp: form.whatsapp,
+      titulo: form.titulo || null,
+      logo_url: form.logo_url || null,
+      frases: form.frases || null,
       banner_text: form.banner_text,
       banner_video_url: form.banner_video_url
     })
@@ -105,13 +127,45 @@ export default function MinhaLoja() {
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-mist">Nome de exibição</label>
+            <label className="mb-1 block text-sm text-mist">Nome de exibição (uso interno, aparece só nessa lista de "Editando a loja de")</label>
             <input className="input" value={form.display_name} onChange={(e) => setForm({ ...form, display_name: e.target.value })} required />
           </div>
 
           <div>
-            <label className="mb-1 block text-sm text-mist">WhatsApp dessa loja</label>
-            <input className="input" value={form.whatsapp} onChange={(e) => setForm({ ...form, whatsapp: e.target.value })} placeholder="(DDD) 9 9999-9999" />
+            <label className="mb-1 block text-sm text-mist">Título da loja</label>
+            <input
+              className="input"
+              value={form.titulo}
+              onChange={(e) => setForm({ ...form, titulo: e.target.value })}
+              placeholder="Ex: Loja da Mika"
+            />
+            <p className="mt-1 text-xs text-mist">Esse é o título que aparece de verdade no topo da página. Escreve do jeito que preferir.</p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-mist">Logo (opcional)</label>
+            {form.logo_url && <img src={form.logo_url} alt="" className="mb-2 h-16 w-auto" />}
+            <label className="btn-ghost inline-block cursor-pointer">
+              {enviandoLogo ? 'Enviando...' : form.logo_url ? 'Trocar logo' : 'Escolher logo'}
+              <input type="file" accept="image/*" className="sr-only" onChange={(e) => enviarLogo(e.target.files[0])} />
+            </label>
+            {form.logo_url && (
+              <button type="button" onClick={() => setForm({ ...form, logo_url: '' })} className="ml-3 text-sm text-ember">
+                Remover
+              </button>
+            )}
+            <p className="mt-1 text-xs text-mist">Aparece embaixo do título.</p>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-sm text-mist">Frases (opcional)</label>
+            <textarea
+              className="input min-h-20"
+              value={form.frases}
+              onChange={(e) => setForm({ ...form, frases: e.target.value })}
+              placeholder={'Entrega rápida\nContas com garantia'}
+            />
+            <p className="mt-1 text-xs text-mist">Uma frase por linha — ficam girando do lado da logo.</p>
           </div>
 
           <div>
