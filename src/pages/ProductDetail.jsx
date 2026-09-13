@@ -4,11 +4,83 @@ import { supabase } from '../lib/supabaseClient'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
+function calcularParcelas(preco, config) {
+  const parcelas = []
+  for (let n = 1; n <= config.parcelas_max; n++) {
+    if (n <= config.parcelas_sem_juros) {
+      parcelas.push({ n, valor: preco / n, comJuros: false })
+    } else {
+      const i = config.parcelas_juros_mensal / 100
+      const valorParcela = (preco * i * Math.pow(1 + i, n)) / (Math.pow(1 + i, n) - 1)
+      parcelas.push({ n, valor: valorParcela, comJuros: true })
+    }
+  }
+  return parcelas
+}
+
+function ModalPagamento({ preco, config, onFechar }) {
+  const parcelas = calcularParcelas(preco, config)
+  return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/50 sm:items-center" onClick={onFechar}>
+      <div
+        className="max-h-[80vh] w-full max-w-md overflow-y-auto rounded-t-2xl bg-white p-5 sm:rounded-2xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-lg font-bold text-ink">Formas de pagamento</h3>
+          <button onClick={onFechar} className="text-mist">✕</button>
+        </div>
+
+        <div className="mb-4 flex flex-wrap gap-2">
+          {['Visa', 'Mastercard', 'Elo', 'Pix'].map((m) => (
+            <span key={m} className="rounded border border-line px-2.5 py-1 text-xs font-semibold text-mist">{m}</span>
+          ))}
+        </div>
+
+        <p className="mb-2 text-sm font-semibold text-ink">Parcelamento no cartão</p>
+        <div className="max-h-64 space-y-1 overflow-y-auto">
+          {parcelas.map((p) => (
+            <div key={p.n} className="flex justify-between border-b border-line py-1.5 text-sm">
+              <span className="text-mist">{p.n}x de {money(p.valor)}</span>
+              <span className={p.comJuros ? 'text-mist' : 'text-emerald'}>{p.comJuros ? 'com juros' : 'sem juros'}</span>
+            </div>
+          ))}
+        </div>
+        <p className="mt-3 text-xs text-mist">No Pix, à vista, com o preço cheio mostrado na página.</p>
+      </div>
+    </div>
+  )
+}
+
+function ModalZoom({ url, tipo, onFechar }) {
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onFechar}>
+      {tipo === 'video' ? (
+        <video src={url} controls autoPlay className="max-h-full max-w-full" onClick={(e) => e.stopPropagation()} />
+      ) : (
+        <img
+          src={url}
+          alt=""
+          className="max-h-full max-w-full touch-pinch-zoom object-contain"
+          onClick={(e) => e.stopPropagation()}
+          onContextMenu={(e) => e.preventDefault()}
+        />
+      )}
+      <button onClick={onFechar} className="absolute right-4 top-4 text-2xl text-white">✕</button>
+    </div>
+  )
+}
+
 export default function ProductDetail() {
   const { id } = useParams()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [ativo, setAtivo] = useState(0)
+  const [mostrarPagamento, setMostrarPagamento] = useState(false)
+  const [mostrarZoom, setMostrarZoom] = useState(false)
+  const [descricaoAberta, setDescricaoAberta] = useState(false)
+  const [whatsappDono, setWhatsappDono] = useState(null)
+  const [config, setConfig] = useState({ parcelas_max: 12, parcelas_sem_juros: 3, parcelas_juros_mensal: 2.99 })
 
   useEffect(() => {
     async function load() {
@@ -22,62 +94,149 @@ export default function ProductDetail() {
       setLoading(false)
     }
     load()
+
+    supabase.from('site_settings').select('parcelas_max, parcelas_sem_juros, parcelas_juros_mensal').single().then(({ data }) => {
+      if (data) setConfig(data)
+    })
+    supabase.rpc('site_contato_dono').then(({ data }) => {
+      if (data?.[0]?.whatsapp) setWhatsappDono(data[0].whatsapp)
+    })
   }, [id])
 
-  if (loading) return <p className="mx-auto max-w-6xl px-4 py-10 text-mist">Carregando...</p>
-  if (!product) return <p className="mx-auto max-w-6xl px-4 py-10 text-mist">Conta não encontrada.</p>
+  if (loading) return <p className="mx-auto max-w-4xl px-4 py-10 text-mist">Carregando...</p>
+  if (!product) return <p className="mx-auto max-w-4xl px-4 py-10 text-mist">Conta não encontrada.</p>
 
   const disponivel = product.status === 'disponivel'
   const midia = product.media || []
   const atual = midia[ativo]
+  const temDesconto = product.compare_price && product.compare_price > product.price
+  const percentualOff = temDesconto ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100) : 0
+
+  const linkProduto = window.location.href
+  const textoCompartilhar = `Olha essa conta de ${product.game}: ${product.title} — ${linkProduto}`
+
+  async function compartilhar() {
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: product.title, text: `Olha essa conta de ${product.game}!`, url: linkProduto })
+      } catch {
+        // pessoa cancelou o compartilhamento, tudo bem
+      }
+    } else {
+      await navigator.clipboard.writeText(linkProduto)
+      alert('Link copiado!')
+    }
+  }
 
   return (
     <div className="mx-auto max-w-4xl px-4 py-10">
-      <div className="aspect-square w-full overflow-hidden rounded-lg bg-panel2">
+      <div
+        className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-panel2"
+        onClick={() => atual && setMostrarZoom(true)}
+      >
+        {temDesconto && (
+          <span className="absolute left-3 top-3 z-10 rounded bg-emerald px-2 py-1 text-xs font-bold text-white">
+            {percentualOff}% OFF
+          </span>
+        )}
         {atual && (
           atual.type === 'video' ? (
-            <video src={atual.url} controls className="h-full w-full object-contain" />
+            <video src={atual.url} controls className="h-full w-full object-contain" onClick={(e) => e.stopPropagation()} />
           ) : (
-            <img src={atual.url} alt={product.title} className="h-full w-full object-contain" />
+            <img
+              src={atual.url}
+              alt={product.title}
+              className="h-full w-full object-contain"
+              onContextMenu={(e) => e.preventDefault()}
+              style={{ WebkitTouchCallout: 'none', userSelect: 'none' }}
+              draggable={false}
+            />
           )
         )}
       </div>
 
       {midia.length > 1 && (
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex gap-2 overflow-x-auto">
           {midia.map((m, i) => (
             <button
               key={i}
               onClick={() => setAtivo(i)}
-              className={`h-16 w-24 overflow-hidden rounded border ${i === ativo ? 'border-gold' : 'border-line'}`}
+              className={`h-16 w-24 flex-shrink-0 overflow-hidden rounded border ${i === ativo ? 'border-gold' : 'border-line'}`}
             >
               {m.type === 'video' ? (
                 <video src={m.url} muted className="h-full w-full object-contain" />
               ) : (
-                <img src={m.url} alt="" className="h-full w-full object-contain" />
+                <img src={m.url} alt="" className="h-full w-full object-contain" onContextMenu={(e) => e.preventDefault()} draggable={false} />
               )}
             </button>
           ))}
         </div>
       )}
 
-      <span className="mt-6 inline-block text-sm uppercase tracking-wide text-emerald">{product.game}</span>
-      <h1 className="mt-1 text-3xl font-bold text-ink">{product.title}</h1>
-      <p className="mt-4 whitespace-pre-line text-mist">{product.description}</p>
+      <h1 className="mt-6 text-2xl font-bold text-ink sm:text-3xl">{product.title}</h1>
 
-      <div className="mt-8 flex items-center justify-between rounded-lg border border-line bg-panel p-6">
-        {product.compare_price && product.compare_price > product.price && (
-          <p className="text-base text-mist line-through">{money(product.compare_price)}</p>
-        )}
+      <div className="mt-2">
+        {temDesconto && <p className="text-base text-mist line-through">{money(product.compare_price)}</p>}
         <span className="text-3xl font-bold text-ink">{money(product.price)}</span>
+      </div>
+
+      <button onClick={() => setMostrarPagamento(true)} className="mt-1 text-xs text-mist underline">
+        Ver formas de pagamento e parcelas
+      </button>
+
+      <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         {disponivel ? (
-          <Link to={`/checkout/${product.id}`} className="btn-primary">
+          <Link to={`/checkout/${product.id}`} className="btn-primary flex-1 text-center">
             Comprar agora
           </Link>
         ) : (
-          <span className="rounded-md bg-ember/20 px-4 py-2 text-ember">Indisponível</span>
+          <span className="flex-1 rounded-md bg-ember/20 px-4 py-3 text-center text-ember">Indisponível</span>
+        )}
+        {whatsappDono && (
+          <a
+            href={`https://wa.me/55${whatsappDono.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi! Tenho interesse nessa conta: ${product.title}`)}`}
+            target="_blank"
+            rel="noreferrer"
+            className="btn-ghost flex-1 text-center"
+          >
+            Falar no WhatsApp
+          </a>
         )}
       </div>
+
+      <div className="mt-4 flex items-center gap-3">
+        <span className="text-xs text-mist">Compartilhar:</span>
+        <button onClick={compartilhar} className="text-sm text-mist hover:text-ink" aria-label="Compartilhar">
+          🔗 Compartilhar
+        </button>
+        <a
+          href={`https://wa.me/?text=${encodeURIComponent(textoCompartilhar)}`}
+          target="_blank"
+          rel="noreferrer"
+          className="text-sm text-mist hover:text-emerald"
+        >
+          WhatsApp
+        </a>
+      </div>
+
+      <div className="mt-8 border-t border-line pt-6">
+        <h2 className="mb-2 text-sm font-bold uppercase tracking-wide text-ink">Descrição da conta</h2>
+        <p className={`whitespace-pre-line text-sm text-mist ${!descricaoAberta && 'line-clamp-6'}`}>
+          {product.description}
+        </p>
+        {product.description?.length > 300 && (
+          <button onClick={() => setDescricaoAberta((v) => !v)} className="mt-2 text-xs font-semibold text-gold">
+            {descricaoAberta ? 'Ver menos' : 'Ver descrição completa'}
+          </button>
+        )}
+      </div>
+
+      {mostrarPagamento && (
+        <ModalPagamento preco={product.price} config={config} onFechar={() => setMostrarPagamento(false)} />
+      )}
+      {mostrarZoom && atual && (
+        <ModalZoom url={atual.url} tipo={atual.type} onFechar={() => setMostrarZoom(false)} />
+      )}
     </div>
   )
 }
