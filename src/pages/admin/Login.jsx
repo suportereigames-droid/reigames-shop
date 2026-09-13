@@ -1,16 +1,28 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../context/AuthContext.jsx'
 
 export default function Login() {
-  const { signIn, session } = useAuth()
+  const { signIn, session, profile, profileLoading, signOut } = useAuth()
   const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  if (session) navigate('/admin', { replace: true })
+  useEffect(() => {
+    if (!session || profileLoading) return
+    if (profile) {
+      // Sessão de equipe de verdade — segue pro painel.
+      navigate('/admin', { replace: true })
+    } else {
+      // Sessão existente mas sem perfil de equipe (ex: alguém que só
+      // logou como comprador em "Minha conta" nesse navegador). Essa
+      // sessão não serve pra admin — desloga em silêncio pra liberar
+      // o formulário de login normalmente.
+      signOut()
+    }
+  }, [session, profile, profileLoading])
 
   async function handleSubmit(e) {
     e.preventDefault()
