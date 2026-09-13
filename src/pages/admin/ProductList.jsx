@@ -58,13 +58,33 @@ export default function ProductList() {
     load()
   }
 
+  async function excluirTodasOcultas() {
+    const ocultas = products.filter((p) => p.status === 'oculto')
+    if (ocultas.length === 0) return
+    if (!confirm(`Apagar as ${ocultas.length} contas ocultas de uma vez? As fotos/vídeos delas também são apagados. Isso não pode ser desfeito.`)) return
+
+    for (const p of ocultas) {
+      const paths = (p.media || []).map((m) => m.path).filter(Boolean)
+      if (paths.length) await supabase.storage.from(BUCKET).remove(paths)
+      await supabase.from('products').delete().eq('id', p.id)
+    }
+    load()
+  }
+
   return (
     <div>
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold text-ink">
           {sellerId ? `Contas de ${nomeVendedor}` : isAdmin ? 'Todas as contas' : 'Minhas contas'}
         </h1>
-        <Link to="/admin/produtos/novo" className="btn-primary">+ Nova conta</Link>
+        <div className="flex items-center gap-3">
+          {products.some((p) => p.status === 'oculto') && (
+            <button onClick={excluirTodasOcultas} className="text-sm text-ember hover:underline">
+              Excluir todas as ocultas ({products.filter((p) => p.status === 'oculto').length})
+            </button>
+          )}
+          <Link to="/admin/produtos/novo" className="btn-primary">+ Nova conta</Link>
+        </div>
       </div>
 
       {sellerId && (

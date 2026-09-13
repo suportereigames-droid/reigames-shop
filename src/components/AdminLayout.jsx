@@ -36,7 +36,6 @@ export default function AdminLayout() {
           {isAdmin && <NavLink to="/admin/menu" className={linkClass}>Menu do site</NavLink>}
           {isAdmin && <NavLink to="/admin/banner" className={linkClass}>Banner e Parcerias</NavLink>}
           {isAdmin && <NavLink to="/admin/parcelamento" className={linkClass}>Parcelamento</NavLink>}
-          {isAdmin && <NavLink to="/admin/importar" className={linkClass}>Importar do Shopify</NavLink>}
           {isAdmin && <NavLink to="/admin/aparencia" className={linkClass}>Aparência</NavLink>}
         </nav>
         <button onClick={handleSignOut} className="btn-ghost mt-8 w-full text-sm">Sair</button>
