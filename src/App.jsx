@@ -17,6 +17,7 @@ import Aparencia from './pages/admin/Aparencia.jsx'
 import PaginasList from './pages/admin/PaginasList.jsx'
 import PaginaForm from './pages/admin/PaginaForm.jsx'
 import PaginaCategoriasList from './pages/admin/PaginaCategoriasList.jsx'
+import MenuList from './pages/admin/MenuList.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
 export default function App() {
@@ -56,6 +57,7 @@ export default function App() {
         <Route path="paginas/nova" element={<PaginaForm />} />
         <Route path="paginas/:id" element={<PaginaForm />} />
         <Route path="categorias-pagina" element={<PaginaCategoriasList />} />
+        <Route path="menu" element={<MenuList />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

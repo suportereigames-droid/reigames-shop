@@ -5,8 +5,8 @@ import { supabase } from '../lib/supabaseClient'
 export default function StoreLayout() {
   const location = useLocation()
   const [logoUrl, setLogoUrl] = useState(null)
-  const [paginas, setPaginas] = useState([])
-  const [categoriasPagina, setCategoriasPagina] = useState([])
+  const [itensMenu, setItensMenu] = useState([])
+  const [todasPaginas, setTodasPaginas] = useState([])
   const [menuAberto, setMenuAberto] = useState(false)
   const [categoriaAberta, setCategoriaAberta] = useState(null)
   const [config, setConfig] = useState({ instagram_url: null, whatsapp_numero: null, rodape_texto: null })
@@ -42,18 +42,12 @@ export default function StoreLayout() {
       const contato = data?.[0]
       if (contato) setConfig((c) => ({ ...c, whatsapp_numero: contato.whatsapp, instagram_url: contato.instagram_url }))
     })
+    supabase.from('site_pages').select('id, slug, menu_label, page_category_id').then(({ data }) => setTodasPaginas(data || []))
     supabase
-      .from('site_pages')
-      .select('slug, menu_label, page_category_id')
-      .eq('show_in_menu', true)
+      .from('menu_items')
+      .select('*, site_pages(slug, menu_label), page_categories(id, name)')
       .order('sort_order', { ascending: true })
-      .then(({ data }) => setPaginas(data || []))
-    supabase
-      .from('page_categories')
-      .select('*')
-      .eq('show_in_menu', true)
-      .order('sort_order', { ascending: true })
-      .then(({ data }) => setCategoriasPagina(data || []))
+      .then(({ data }) => setItensMenu(data || []))
   }, [])
 
   useEffect(() => {
@@ -61,8 +55,7 @@ export default function StoreLayout() {
     setMenuAberto(false)
   }, [location.pathname])
 
-  const paginasAvulsas = paginas.filter((p) => !p.page_category_id)
-  const paginasPorCategoria = (categoriaId) => paginas.filter((p) => p.page_category_id === categoriaId)
+  const paginasPorCategoria = (categoriaId) => todasPaginas.filter((p) => p.page_category_id === categoriaId)
 
   return (
     <div className="min-h-screen bg-white">
@@ -100,26 +93,48 @@ export default function StoreLayout() {
             <div className="absolute left-4 top-full z-50 mt-1 w-72 rounded-lg border border-line bg-white py-2 shadow-xl">
               <Link to="/" className="block px-4 py-2 text-sm text-ink hover:bg-panel">Início</Link>
 
-              {paginasAvulsas.map((p) => (
-                <Link key={p.slug} to={`/pagina/${p.slug}`} className="block px-4 py-2 text-sm text-ink hover:bg-panel">
-                  {p.menu_label}
-                </Link>
-              ))}
+              {itensMenu.map((item) => {
+                if (item.tipo === 'link') {
+                  const externo = /^https?:\/\//.test(item.url || '')
+                  return externo ? (
+                    <a key={item.id} href={item.url} target="_blank" rel="noreferrer" className="block px-4 py-2 text-sm text-ink hover:bg-panel">
+                      {item.label}
+                    </a>
+                  ) : (
+                    <Link key={item.id} to={item.url} className="block px-4 py-2 text-sm text-ink hover:bg-panel">
+                      {item.label}
+                    </Link>
+                  )
+                }
 
-              {categoriasPagina.map((cat) => {
-                const filhas = paginasPorCategoria(cat.id)
-                if (filhas.length === 0) return null
+                if (item.tipo === 'pagina') {
+                  if (!item.site_pages) return null
+                  return (
+                    <Link
+                      key={item.id}
+                      to={`/pagina/${item.site_pages.slug}`}
+                      className="block px-4 py-2 text-sm text-ink hover:bg-panel"
+                    >
+                      {item.site_pages.menu_label}
+                    </Link>
+                  )
+                }
+
+                // tipo === 'categoria'
+                if (!item.page_categories) return null
+                const filhas = paginasPorCategoria(item.page_categories.id)
                 return (
-                  <div key={cat.id}>
+                  <div key={item.id}>
                     <button
-                      onClick={() => setCategoriaAberta(categoriaAberta === cat.id ? null : cat.id)}
+                      onClick={() => setCategoriaAberta(categoriaAberta === item.id ? null : item.id)}
                       className="flex w-full items-center justify-between px-4 py-2 text-left text-sm font-semibold text-ink hover:bg-panel"
                     >
-                      {cat.name}
-                      <span className="text-mist">{categoriaAberta === cat.id ? '−' : '+'}</span>
+                      {item.page_categories.name}
+                      <span className="text-mist">{categoriaAberta === item.id ? '−' : '+'}</span>
                     </button>
-                    {categoriaAberta === cat.id && (
+                    {categoriaAberta === item.id && (
                       <div className="bg-panel/60 pb-1">
+                        {filhas.length === 0 && <p className="px-8 py-2 text-xs text-mist">Nenhuma página aqui ainda.</p>}
                         {filhas.map((p) => (
                           <Link
                             key={p.slug}

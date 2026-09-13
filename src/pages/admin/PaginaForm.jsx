@@ -99,30 +99,21 @@ export default function PaginaForm() {
           </div>
         </div>
 
-        <label className="flex items-center gap-2 text-sm text-mist">
-          <input
-            type="checkbox"
-            checked={form.show_in_menu}
-            onChange={(e) => setForm({ ...form, show_in_menu: e.target.checked })}
-          />
-          Mostrar essa página no menu do site
-        </label>
-
         <div>
-          <label className="mb-1 block text-sm text-mist">Categoria no menu (opcional)</label>
+          <label className="mb-1 block text-sm text-mist">Agrupar dentro de uma categoria (opcional)</label>
           <select
             className="input"
             value={form.page_category_id || ''}
             onChange={(e) => setForm({ ...form, page_category_id: e.target.value || null })}
           >
-            <option value="">Página avulsa (fica solta no menu)</option>
+            <option value="">Nenhuma</option>
             {categoriasPagina.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>
           <p className="mt-1 text-xs text-mist">
-            Páginas na mesma categoria ficam agrupadas dentro de uma "pastinha" no menu do site. Categorias
-            novas você cria em <a href="/admin/categorias-pagina" className="underline">Categorias de página</a>.
+            Só agrupa visualmente; pra aparecer no menu do site, adicione essa página (ou a categoria) em{' '}
+            <a href="/admin/menu" className="underline">Menu do site</a>.
           </p>
         </div>
 
