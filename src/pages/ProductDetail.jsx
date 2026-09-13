@@ -38,12 +38,11 @@ function ModalPagamento({ preco, taxas, onFechar }) {
         <div className="max-h-64 space-y-1 overflow-y-auto">
           {parcelas.map((p) => (
             <div key={p.n} className="flex justify-between border-b border-line py-1.5 text-sm">
-              <span className="text-mist">{p.n}x de {money(p.valor)}</span>
+              <span className="text-ink">{p.n}x de {money(p.valor)}</span>
               <span className={p.comJuros ? 'text-mist' : 'text-emerald'}>{p.comJuros ? 'com juros' : 'sem juros'}</span>
             </div>
           ))}
         </div>
-        <p className="mt-3 text-xs text-mist">No Pix, à vista, com o preço cheio mostrado na página.</p>
       </div>
     </div>
   )
