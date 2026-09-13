@@ -19,6 +19,7 @@ import PaginaForm from './pages/admin/PaginaForm.jsx'
 import PaginaCategoriasList from './pages/admin/PaginaCategoriasList.jsx'
 import CategoriasList from './pages/admin/CategoriasList.jsx'
 import BannerList from './pages/admin/BannerList.jsx'
+import ParcelamentoList from './pages/admin/ParcelamentoList.jsx'
 import MenuList from './pages/admin/MenuList.jsx'
 import ProtectedRoute from './components/ProtectedRoute.jsx'
 
@@ -61,6 +62,7 @@ export default function App() {
         <Route path="categorias-pagina" element={<PaginaCategoriasList />} />
         <Route path="categorias" element={<CategoriasList />} />
         <Route path="banner" element={<BannerList />} />
+        <Route path="parcelamento" element={<ParcelamentoList />} />
         <Route path="menu" element={<MenuList />} />
       </Route>
 

@@ -8,7 +8,6 @@ export default function BannerList() {
   const [frasesVelocidade, setFrasesVelocidade] = useState(20)
   const [bannerIntervalo, setBannerIntervalo] = useState(4)
   const [parceriasCategoriaId, setParceriasCategoriaId] = useState(null)
-  const [taxas, setTaxas] = useState({})
   const [salvando, setSalvando] = useState(false)
   const [error, setError] = useState('')
 
@@ -16,7 +15,7 @@ export default function BannerList() {
     const [{ data: bnrs }, { data: cats }, { data: settings }] = await Promise.all([
       supabase.from('banner_slides').select('*').order('sort_order'),
       supabase.from('page_categories').select('*').order('sort_order'),
-      supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas, banner_intervalo').single()
+      supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, banner_intervalo').single()
     ])
     setBanners(bnrs || [])
     setCategoriasPagina(cats || [])
@@ -24,7 +23,6 @@ export default function BannerList() {
     setFrasesVelocidade(settings?.frases_velocidade || 20)
     setBannerIntervalo(settings?.banner_intervalo || 4)
     setParceriasCategoriaId(settings?.parcerias_categoria_id || null)
-    setTaxas(settings?.parcelas_taxas || {})
   }
 
   useEffect(() => { load() }, [])
@@ -71,7 +69,6 @@ export default function BannerList() {
         frases_velocidade: Number(frasesVelocidade) || 20,
         banner_intervalo: Number(bannerIntervalo) || 4,
         parcerias_categoria_id: parceriasCategoriaId,
-        parcelas_taxas: taxas
       })
       .eq('id', true)
     setSalvando(false)
@@ -80,10 +77,6 @@ export default function BannerList() {
       return
     }
     alert('Salvo!')
-  }
-
-  function mudarTaxa(n, valor) {
-    setTaxas((t) => ({ ...t, [n]: valor === '' ? 0 : Number(valor) }))
   }
 
   return (
@@ -148,30 +141,6 @@ export default function BannerList() {
 
       <button onClick={salvar} disabled={salvando} className="btn-primary mt-6">
         {salvando ? 'Salvando...' : 'Salvar frases e parcerias'}
-      </button>
-
-      <h2 className="mt-10 font-semibold text-ink">Parcelamento no cartão</h2>
-      <p className="text-sm text-mist">
-        % que soma no preço total conforme o número de parcelas (do jeito que sua maquininha/gateway informa —
-        não é taxa mensal). Deixe 0 pra "sem juros".
-      </p>
-
-      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-        {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
-          <div key={n}>
-            <label className="mb-1 block text-xs text-mist">{n}x</label>
-            <input
-              type="number" step="0.01" min="0" className="input"
-              value={taxas[n] ?? ''}
-              onChange={(e) => mudarTaxa(n, e.target.value)}
-              placeholder="0"
-            />
-          </div>
-        ))}
-      </div>
-
-      <button onClick={salvar} disabled={salvando} className="btn-primary mt-4">
-        {salvando ? 'Salvando...' : 'Salvar parcelamento'}
       </button>
     </div>
   )
