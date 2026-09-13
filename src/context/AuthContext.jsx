@@ -7,10 +7,13 @@ export function AuthProvider({ children }) {
   const [session, setSession] = useState(null)
   const [profile, setProfile] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [profileLoading, setProfileLoading] = useState(true)
 
   async function loadProfile(userId) {
+    setProfileLoading(true)
     if (!userId) {
       setProfile(null)
+      setProfileLoading(false)
       return
     }
     const { data, error } = await supabase
@@ -18,7 +21,8 @@ export function AuthProvider({ children }) {
       .select('id, full_name, role')
       .eq('id', userId)
       .single()
-    if (!error) setProfile(data)
+    setProfile(error ? null : data)
+    setProfileLoading(false)
   }
 
   useEffect(() => {
@@ -50,6 +54,7 @@ export function AuthProvider({ children }) {
     profile,
     isAdmin: profile?.role === 'admin',
     loading,
+    profileLoading,
     signIn,
     signOut
   }
