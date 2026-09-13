@@ -20,11 +20,19 @@ export default function PaginaForm() {
     })
   }, [id])
 
+  function gerarSlugValido(texto) {
+    return texto
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // tira acento
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-') // qualquer coisa que não seja letra/número vira hífen
+      .replace(/^-+|-+$/g, '') // tira hífen do início/fim
+  }
+
   async function salvar(e) {
     e.preventDefault()
     setSaving(true)
     setError('')
-    const slugLimpo = form.slug.trim().toLowerCase().replace(/\s+/g, '-')
+    const slugLimpo = gerarSlugValido(form.slug)
     const payload = { ...form, slug: slugLimpo }
 
     const { error } = isEditing
@@ -33,7 +41,7 @@ export default function PaginaForm() {
 
     setSaving(false)
     if (error) {
-      setError(error.message.includes('duplicate') ? 'Já existe uma página com esse link.' : 'Não foi possível salvar.')
+      setError(error.message)
       return
     }
     navigate('/admin/paginas')
