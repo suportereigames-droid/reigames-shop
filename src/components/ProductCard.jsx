@@ -15,7 +15,7 @@ export default function ProductCard({ product }) {
       className="card group relative overflow-hidden transition-colors hover:border-gold/60"
     >
       {temDesconto && (
-        <span className="absolute left-2 top-2 z-10 rounded-full bg-emerald px-2 py-0.5 text-[10px] font-bold text-white">
+        <span className="absolute left-1.5 top-1.5 z-10 rounded bg-emerald px-1.5 py-0.5 text-[9px] font-bold text-white">
           {percentualOff}% OFF
         </span>
       )}
@@ -30,11 +30,11 @@ export default function ProductCard({ product }) {
       </div>
       <div className="p-2.5 sm:p-4">
         <h3 className="line-clamp-5 text-[11px] font-semibold leading-snug text-ink sm:text-xs">{product.title}</h3>
-        <div className="mt-1.5 flex items-center gap-2">
+        <div className="mt-1.5">
           {temDesconto && (
-            <span className="text-xs text-mist line-through">{money(product.compare_price)}</span>
+            <p className="text-xs text-mist line-through">{money(product.compare_price)}</p>
           )}
-          <p className="text-sm font-bold text-gold sm:text-base">{money(product.price)}</p>
+          <p className="text-base font-bold text-ink sm:text-lg">{money(product.price)}</p>
         </div>
       </div>
     </Link>

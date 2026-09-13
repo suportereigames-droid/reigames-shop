@@ -66,10 +66,10 @@ export default function ProductDetail() {
       <p className="mt-4 whitespace-pre-line text-mist">{product.description}</p>
 
       <div className="mt-8 flex items-center justify-between rounded-lg border border-line bg-panel p-6">
-        <span className="text-3xl font-bold text-gold">{money(product.price)}</span>
         {product.compare_price && product.compare_price > product.price && (
-          <span className="ml-2 text-base text-mist line-through">{money(product.compare_price)}</span>
+          <p className="text-base text-mist line-through">{money(product.compare_price)}</p>
         )}
+        <span className="text-3xl font-bold text-ink">{money(product.price)}</span>
         {disponivel ? (
           <Link to={`/checkout/${product.id}`} className="btn-primary">
             Comprar agora
