@@ -52,7 +52,7 @@ function ModalZoom({ url, tipo, onFechar }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onFechar}>
       {tipo === 'video' ? (
-        <video src={url} controls autoPlay className="max-h-full max-w-full" onClick={(e) => e.stopPropagation()} />
+        <video src={url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture autoPlay className="max-h-full max-w-full" onClick={(e) => e.stopPropagation()} />
       ) : (
         <img
           src={url}
@@ -136,7 +136,7 @@ export default function ProductDetail() {
         )}
         {atual && (
           atual.type === 'video' ? (
-            <video src={atual.url} controls className="h-full w-full object-contain" onClick={(e) => e.stopPropagation()} />
+            <video src={atual.url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture className="h-full w-full object-contain" onClick={(e) => e.stopPropagation()} />
           ) : (
             <img
               src={atual.url}

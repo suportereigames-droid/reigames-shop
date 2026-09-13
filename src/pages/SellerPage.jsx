@@ -46,7 +46,7 @@ export default function SellerPage() {
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
       {pagina.banner_video_url && (
-        <video src={pagina.banner_video_url} controls className="mb-6 aspect-video w-full rounded-lg bg-panel2" />
+        <video src={pagina.banner_video_url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture className="mb-6 aspect-video w-full rounded-lg bg-panel2" />
       )}
 
       <h1 className="text-3xl font-bold text-ink md:text-4xl">Loja de {pagina.display_name}</h1>
