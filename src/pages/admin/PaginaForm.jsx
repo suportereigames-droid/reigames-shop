@@ -142,8 +142,18 @@ export default function PaginaForm() {
           {form.image_url && (
             <img src={form.image_url} alt="" className="mb-2 h-32 w-full rounded object-cover" />
           )}
-          <input type="file" accept="image/*" onChange={(e) => enviarImagem(e.target.files[0])} className="text-sm text-mist" />
-          {enviandoImagem && <p className="mt-1 text-xs text-mist">Enviando...</p>}
+          <label className="btn-ghost inline-block cursor-pointer">
+            {enviandoImagem ? 'Enviando...' : form.image_url ? 'Trocar imagem' : 'Escolher imagem'}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => enviarImagem(e.target.files[0])}
+              className="hidden"
+            />
+          </label>
+          {form.image_url && !enviandoImagem && (
+            <span className="ml-3 text-xs text-emerald">✓ Imagem enviada</span>
+          )}
         </div>
 
         <div>
