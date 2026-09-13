@@ -5,7 +5,10 @@ import { supabase } from '../lib/supabaseClient'
 export default function StoreLayout() {
   const location = useLocation()
   const [logoUrl, setLogoUrl] = useState(null)
-  const [menu, setMenu] = useState([])
+  const [paginas, setPaginas] = useState([])
+  const [categoriasPagina, setCategoriasPagina] = useState([])
+  const [menuAberto, setMenuAberto] = useState(false)
+  const [categoriaAberta, setCategoriaAberta] = useState(null)
   const [config, setConfig] = useState({ instagram_url: null, whatsapp_numero: null, rodape_texto: null })
 
   useEffect(() => {
@@ -41,16 +44,39 @@ export default function StoreLayout() {
     })
     supabase
       .from('site_pages')
-      .select('slug, menu_label')
+      .select('slug, menu_label, page_category_id')
       .eq('show_in_menu', true)
       .order('sort_order', { ascending: true })
-      .then(({ data }) => setMenu(data || []))
+      .then(({ data }) => setPaginas(data || []))
+    supabase
+      .from('page_categories')
+      .select('*')
+      .order('sort_order', { ascending: true })
+      .then(({ data }) => setCategoriasPagina(data || []))
   }, [])
+
+  useEffect(() => {
+    // Fecha o menu sempre que navegar pra outra página
+    setMenuAberto(false)
+  }, [location.pathname])
+
+  const paginasAvulsas = paginas.filter((p) => !p.page_category_id)
+  const paginasPorCategoria = (categoriaId) => paginas.filter((p) => p.page_category_id === categoriaId)
 
   return (
     <div className="min-h-screen bg-white">
-      <header className="border-b border-line">
-        <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
+      <header className="relative border-b border-line">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-4">
+          <button
+            onClick={() => setMenuAberto((v) => !v)}
+            className="flex h-9 w-9 items-center justify-center rounded border border-line text-ink"
+            aria-label="Abrir menu"
+          >
+            <svg viewBox="0 0 24 24" className="h-5 w-5 fill-current">
+              <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
+            </svg>
+          </button>
+
           <Link to="/" className="flex items-center gap-2">
             {logoUrl ? (
               <img src={logoUrl} alt="Rei Games" className="h-9 w-auto" />
@@ -61,15 +87,55 @@ export default function StoreLayout() {
               </>
             )}
           </Link>
-          <nav className="flex items-center gap-6 text-sm text-mist">
+
+          <nav className="ml-auto text-sm text-mist">
             <Link to="/minha-conta" className="hover:text-ink">Minha conta</Link>
-            {menu.map((item) => (
-              <Link key={item.slug} to={`/pagina/${item.slug}`} className="hover:text-ink">
-                {item.menu_label}
-              </Link>
-            ))}
           </nav>
         </div>
+
+        {menuAberto && (
+          <>
+            <div className="fixed inset-0 z-40 bg-black/20" onClick={() => setMenuAberto(false)} />
+            <div className="absolute left-4 top-full z-50 mt-1 w-72 rounded-lg border border-line bg-white py-2 shadow-xl">
+              <Link to="/" className="block px-4 py-2 text-sm text-ink hover:bg-panel">Início</Link>
+
+              {paginasAvulsas.map((p) => (
+                <Link key={p.slug} to={`/pagina/${p.slug}`} className="block px-4 py-2 text-sm text-ink hover:bg-panel">
+                  {p.menu_label}
+                </Link>
+              ))}
+
+              {categoriasPagina.map((cat) => {
+                const filhas = paginasPorCategoria(cat.id)
+                if (filhas.length === 0) return null
+                return (
+                  <div key={cat.id}>
+                    <button
+                      onClick={() => setCategoriaAberta(categoriaAberta === cat.id ? null : cat.id)}
+                      className="flex w-full items-center justify-between px-4 py-2 text-left text-sm font-semibold text-ink hover:bg-panel"
+                    >
+                      {cat.name}
+                      <span className="text-mist">{categoriaAberta === cat.id ? '−' : '+'}</span>
+                    </button>
+                    {categoriaAberta === cat.id && (
+                      <div className="bg-panel/60 pb-1">
+                        {filhas.map((p) => (
+                          <Link
+                            key={p.slug}
+                            to={`/pagina/${p.slug}`}
+                            className="block px-8 py-2 text-sm text-mist hover:text-ink"
+                          >
+                            {p.menu_label}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+          </>
+        )}
       </header>
 
       <main>

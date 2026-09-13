@@ -7,18 +7,38 @@ export default function PaginaForm() {
   const isEditing = Boolean(id)
   const navigate = useNavigate()
 
-  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0 })
+  const [categoriasPagina, setCategoriasPagina] = useState([])
+  const [novaCategoria, setNovaCategoria] = useState('')
+  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null })
   const [loading, setLoading] = useState(isEditing)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
+    supabase.from('page_categories').select('*').order('sort_order').then(({ data }) => setCategoriasPagina(data || []))
     if (!isEditing) return
     supabase.from('site_pages').select('*').eq('id', id).single().then(({ data }) => {
       if (data) setForm(data)
       setLoading(false)
     })
   }, [id])
+
+  async function criarCategoria() {
+    const nome = novaCategoria.trim()
+    if (!nome) return
+    const { data, error } = await supabase
+      .from('page_categories')
+      .insert({ name: nome, sort_order: categoriasPagina.length })
+      .select()
+      .single()
+    if (error) {
+      setError(error.message)
+      return
+    }
+    setCategoriasPagina((c) => [...c, data])
+    setForm((f) => ({ ...f, page_category_id: data.id }))
+    setNovaCategoria('')
+  }
 
   function gerarSlugValido(texto) {
     return texto
@@ -85,8 +105,36 @@ export default function PaginaForm() {
             checked={form.show_in_menu}
             onChange={(e) => setForm({ ...form, show_in_menu: e.target.checked })}
           />
-          Mostrar essa página no menu do topo
+          Mostrar essa página no menu do site
         </label>
+
+        <div>
+          <label className="mb-1 block text-sm text-mist">Categoria no menu (opcional)</label>
+          <select
+            className="input"
+            value={form.page_category_id || ''}
+            onChange={(e) => setForm({ ...form, page_category_id: e.target.value || null })}
+          >
+            <option value="">Página avulsa (fica solta no menu)</option>
+            {categoriasPagina.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-mist">
+            Páginas na mesma categoria ficam agrupadas dentro de uma "pastinha" no menu do site.
+          </p>
+          <div className="mt-2 flex gap-2">
+            <input
+              className="input"
+              value={novaCategoria}
+              onChange={(e) => setNovaCategoria(e.target.value)}
+              placeholder="Criar categoria nova (ex: Grupos WhatsApp)"
+            />
+            <button type="button" onClick={criarCategoria} className="btn-ghost whitespace-nowrap">
+              + Criar
+            </button>
+          </div>
+        </div>
 
         <div>
           <label className="mb-1 block text-sm text-mist">Código da página (HTML)</label>
