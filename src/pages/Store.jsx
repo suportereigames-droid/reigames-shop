@@ -135,13 +135,13 @@ export default function Store() {
         <h2 className="mb-3 text-lg font-bold uppercase tracking-wide text-ink">Categorias</h2>
         <LinhaComSetas>
           <button onClick={() => mudarCategoria('todos')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-            <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-xs font-bold text-mist sm:h-20 sm:w-20 ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
+            <div className={`flex h-14 w-14 items-center justify-center rounded-full border-2 text-xs font-bold text-mist ${game === 'todos' ? 'border-gold' : 'border-line'}`}>
               Todos
             </div>
           </button>
           {categoriasComConta.map((c) => (
             <button key={c.id} onClick={() => mudarCategoria(c.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
-              <div className={`h-14 w-14 overflow-hidden rounded-full border-2 sm:h-20 sm:w-20 ${game === c.name ? 'border-gold' : 'border-line'}`}>
+              <div className={`h-14 w-14 overflow-hidden rounded-full border-2 ${game === c.name ? 'border-gold' : 'border-line'}`}>
                 {c.image_url ? (
                   <img src={c.image_url} alt={c.name} className="h-full w-full object-cover" />
                 ) : (
