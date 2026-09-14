@@ -4,6 +4,15 @@ import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
 import { useSEO } from '../lib/useSEO.js'
 
+function embaralhar(lista) {
+  const copia = [...lista]
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[copia[i], copia[j]] = [copia[j], copia[i]]
+  }
+  return copia
+}
+
 function BannerCarousel({ slides, intervalo }) {
   const [indice, setIndice] = useState(0)
   const toqueInicial = useRef(null)
@@ -106,13 +115,13 @@ export default function Store() {
     async function load() {
       setLoading(true)
       const [{ data: prods }, { data: cats }, { data: subs }, { data: bnrs }, { data: settings }] = await Promise.all([
-        supabase.from('products').select('id, game, subcategory, title, price, compare_price, media').eq('status', 'disponivel').order('created_at', { ascending: false }),
+        supabase.from('products').select('id, game, subcategory, title, price, compare_price, media').eq('status', 'disponivel'),
         supabase.from('categories').select('*').order('sort_order'),
         supabase.from('subcategories').select('*').order('sort_order'),
         supabase.from('banner_slides').select('*').order('sort_order'),
         supabase.from('site_settings').select('frases_rotativas, frases_velocidade, parcerias_categoria_id, parcelas_taxas, banner_intervalo').single()
       ])
-      setProducts(prods || [])
+      setProducts(embaralhar(prods || []))
       setCategorias(cats || [])
       setSubcategoriasBanco(subs || [])
       setBanners(bnrs || [])
