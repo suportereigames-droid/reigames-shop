@@ -50,6 +50,22 @@ export default function ProductList() {
     }
   }, [sellerId])
 
+  async function simularCompra(product) {
+    if (!confirm(`Simular uma compra da conta "${product.title}"? Isso cria um pedido de teste e dispara as notificações (pedido novo + pagamento confirmado).`)) return
+    const { data: sessao } = await supabase.auth.getSession()
+    const resposta = await fetch(`${supabase.supabaseUrl}/functions/v1/simulate-test-payment`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${sessao.session.access_token}`,
+        apikey: supabase.supabaseKey
+      },
+      body: JSON.stringify({ productId: product.id })
+    })
+    const corpo = await resposta.json().catch(() => null)
+    alert(resposta.ok ? corpo.mensagem : `Não foi possível: ${corpo?.error || `Erro ${resposta.status}`}`)
+  }
+
   async function handleDelete(product) {
     if (!confirm('Remover esta conta do catálogo? As fotos e vídeos dela também serão apagados.')) return
 
@@ -147,6 +163,11 @@ export default function ProductList() {
                     {isAdmin && <td className="px-4 py-3 text-mist">{p.profiles?.full_name}</td>}
                     <td className="px-4 py-3 text-right">
                       <Link to={`/admin/produtos/${p.id}`} className="mr-3 text-gold hover:underline">Editar</Link>
+                      {isAdmin && (
+                        <button onClick={() => simularCompra(p)} className="mr-3 text-emerald hover:underline">
+                          🧪 Simular compra
+                        </button>
+                      )}
                       <button onClick={() => handleDelete(p)} className="text-ember hover:underline">Excluir</button>
                     </td>
                   </tr>

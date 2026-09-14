@@ -52,6 +52,35 @@ export default function Perfil() {
         <button onClick={salvar} disabled={salvando} className="btn-primary">
           {salvando ? 'Salvando...' : 'Salvar'}
         </button>
+
+        <div>
+          <button
+            onClick={async () => {
+              const { data: sessao } = await supabase.auth.getSession()
+              const resposta = await fetch(`${supabase.supabaseUrl}/functions/v1/test-push`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  Authorization: `Bearer ${sessao.session.access_token}`,
+                  apikey: supabase.supabaseKey
+                }
+              })
+              const corpo = await resposta.json().catch(() => null)
+              alert(
+                resposta.ok
+                  ? `Notificação enviada pra ${corpo.enviadosPara} aparelho(s)! Se não chegar em alguns segundos no celular, o problema é na entrega (Firebase/Expo).`
+                  : `Não foi possível: ${corpo?.error || `Erro ${resposta.status}`}`
+              )
+            }}
+            className="btn-ghost"
+          >
+            📨 Mandar notificação de teste (pro celular logado com essa conta)
+          </button>
+          <p className="mt-1 text-xs text-mist">
+            Só funciona se esse usuário já tiver um token salvo (registrado pelo app antes). Isso testa se o
+            servidor consegue entregar a notificação, sem precisar mexer no app.
+          </p>
+        </div>
       </div>
 
       {isAdmin && (
