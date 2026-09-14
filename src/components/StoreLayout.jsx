@@ -5,6 +5,7 @@ import { supabase } from '../lib/supabaseClient'
 export default function StoreLayout() {
   const location = useLocation()
   const [logoUrl, setLogoUrl] = useState(null)
+  const [logoCarregada, setLogoCarregada] = useState(false)
   const [itensMenu, setItensMenu] = useState([])
   const [todasPaginas, setTodasPaginas] = useState([])
   const [menuAberto, setMenuAberto] = useState(false)
@@ -37,6 +38,7 @@ export default function StoreLayout() {
     supabase.from('site_settings').select('logo_url, rodape_texto').single().then(({ data }) => {
       if (data?.logo_url) setLogoUrl(data.logo_url)
       setConfig((c) => ({ ...c, rodape_texto: data?.rodape_texto || null }))
+      setLogoCarregada(true)
     })
     supabase.rpc('site_contato_dono').then(({ data }) => {
       const contato = data?.[0]
@@ -71,15 +73,15 @@ export default function StoreLayout() {
             </svg>
           </button>
 
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/" className="flex h-9 items-center gap-2">
             {logoUrl ? (
               <img src={logoUrl} alt="Rei Games" className="h-9 w-auto" />
-            ) : (
+            ) : logoCarregada ? (
               <>
                 <span className="font-display text-2xl font-bold uppercase tracking-wide text-gold">Rei</span>
                 <span className="font-display text-2xl font-bold uppercase tracking-wide text-white">Games</span>
               </>
-            )}
+            ) : null}
           </Link>
 
           <nav className="ml-auto text-sm text-white/80">
