@@ -41,26 +41,24 @@ function PainelMembro({ membro, onFechar, onAtualizado }) {
     setProcessando(true)
     try {
       const { data: sessao } = await supabase.auth.getSession()
-      const { data, error } = await supabase.functions.invoke('manage-team-member', {
-        body: { action, memberId: membro.id, ...extra },
-        headers: { Authorization: `Bearer ${sessao.session.access_token}` }
+      const resposta = await fetch(`${supabase.supabaseUrl}/functions/v1/manage-team-member`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${sessao.session.access_token}`,
+          apikey: supabase.supabaseKey
+        },
+        body: JSON.stringify({ action, memberId: membro.id, ...extra })
       })
-      if (error || data?.error) {
-        let mensagem = data?.error || error?.message || 'Não foi possível concluir.'
-        // error.message do supabase-js costuma ser só um aviso genérico —
-        // a mensagem de verdade que a função mandou fica dentro da resposta.
-        if (error?.context) {
-          try {
-            const corpo = await error.context.json()
-            if (corpo?.error) mensagem = corpo.error
-          } catch {
-            // corpo não veio em JSON, mantém a mensagem genérica mesmo
-          }
-        }
-        setError(mensagem)
+      const corpo = await resposta.json().catch(() => null)
+      if (!resposta.ok) {
+        setError(corpo?.error || `Erro ${resposta.status} ao processar.`)
         return false
       }
       return true
+    } catch (err) {
+      setError('Erro de conexão: ' + err.message)
+      return false
     } finally {
       setProcessando(false)
     }
