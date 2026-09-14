@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
@@ -6,6 +6,7 @@ import { useSEO } from '../lib/useSEO.js'
 
 function BannerCarousel({ slides, intervalo }) {
   const [indice, setIndice] = useState(0)
+  const toqueInicial = useRef(null)
 
   useEffect(() => {
     if (slides.length < 2) return
@@ -15,8 +16,26 @@ function BannerCarousel({ slides, intervalo }) {
 
   if (slides.length === 0) return null
 
+  function aoComecarToque(e) {
+    toqueInicial.current = e.touches[0].clientX
+  }
+
+  function aoSoltarToque(e) {
+    if (toqueInicial.current === null) return
+    const distancia = e.changedTouches[0].clientX - toqueInicial.current
+    if (Math.abs(distancia) > 40) {
+      if (distancia < 0) setIndice((i) => (i + 1) % slides.length)
+      else setIndice((i) => (i - 1 + slides.length) % slides.length)
+    }
+    toqueInicial.current = null
+  }
+
   return (
-    <div className="relative mb-4 overflow-hidden rounded-lg">
+    <div
+      className="relative mb-4 overflow-hidden rounded-lg"
+      onTouchStart={aoComecarToque}
+      onTouchEnd={aoSoltarToque}
+    >
       <img src={slides[indice].image_url} alt="" className="aspect-[2/1] w-full object-cover sm:aspect-[3/1]" />
       {slides.length > 1 && (
         <div className="absolute bottom-3 left-1/2 flex -translate-x-1/2 gap-1.5">

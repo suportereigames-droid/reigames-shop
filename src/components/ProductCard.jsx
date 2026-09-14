@@ -21,7 +21,7 @@ export default function ProductCard({ product, taxas }) {
       className="card group relative flex h-full flex-col overflow-hidden transition-colors hover:border-gold/60"
     >
       {temDesconto && (
-        <span className="absolute left-1.5 top-1.5 z-10 rounded bg-emerald px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
+        <span className="absolute left-0 top-0 z-10 rounded-br-md bg-emerald px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
           {percentualOff}% OFF
         </span>
       )}
