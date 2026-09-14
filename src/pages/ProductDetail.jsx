@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useSEO } from '../lib/useSEO.js'
@@ -49,21 +49,96 @@ function ModalPagamento({ preco, taxas, onFechar }) {
   )
 }
 
+function distanciaEntreToques(toques) {
+  const [a, b] = toques
+  return Math.hypot(a.clientX - b.clientX, a.clientY - b.clientY)
+}
+
 function ModalZoom({ url, tipo, onFechar }) {
+  const [escala, setEscala] = useState(1)
+  const [posicao, setPosicao] = useState({ x: 0, y: 0 })
+  const gesto = useRef({ tipo: null, distanciaInicial: 0, escalaInicial: 1, ultimoPonto: null })
+
+  function aoComecarToque(e) {
+    if (e.touches.length === 2) {
+      gesto.current = {
+        tipo: 'pinça',
+        distanciaInicial: distanciaEntreToques(e.touches),
+        escalaInicial: escala
+      }
+    } else if (e.touches.length === 1 && escala > 1) {
+      gesto.current = {
+        tipo: 'arrastar',
+        ultimoPonto: { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      }
+    }
+  }
+
+  function aoMoverToque(e) {
+    if (gesto.current.tipo === 'pinça' && e.touches.length === 2) {
+      e.preventDefault()
+      const distanciaAtual = distanciaEntreToques(e.touches)
+      const novaEscala = Math.min(4, Math.max(1, gesto.current.escalaInicial * (distanciaAtual / gesto.current.distanciaInicial)))
+      setEscala(novaEscala)
+    } else if (gesto.current.tipo === 'arrastar' && e.touches.length === 1) {
+      e.preventDefault()
+      const atual = { x: e.touches[0].clientX, y: e.touches[0].clientY }
+      const dx = atual.x - gesto.current.ultimoPonto.x
+      const dy = atual.y - gesto.current.ultimoPonto.y
+      setPosicao((p) => ({ x: p.x + dx, y: p.y + dy }))
+      gesto.current.ultimoPonto = atual
+    }
+  }
+
+  function aoSoltarToque(e) {
+    if (e.touches.length === 0) {
+      gesto.current = { tipo: null }
+      if (escala <= 1) {
+        setEscala(1)
+        setPosicao({ x: 0, y: 0 })
+      }
+    } else if (e.touches.length === 1 && escala > 1) {
+      // Ainda tem um dedo na tela depois de soltar o segundo — passa a arrastar.
+      gesto.current = { tipo: 'arrastar', ultimoPonto: { x: e.touches[0].clientX, y: e.touches[0].clientY } }
+    }
+  }
+
+  function aoClicarDuasVezes() {
+    if (escala > 1) {
+      setEscala(1)
+      setPosicao({ x: 0, y: 0 })
+    } else {
+      setEscala(2)
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4" onClick={onFechar}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/90" onClick={escala === 1 ? onFechar : undefined}>
       {tipo === 'video' ? (
         <video src={url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture autoPlay className="max-h-full max-w-full" onClick={(e) => e.stopPropagation()} />
       ) : (
         <img
           src={url}
           alt=""
-          className="max-h-full max-w-full touch-pinch-zoom object-contain"
+          className="max-h-full max-w-full select-none object-contain"
+          style={{
+            transform: `translate(${posicao.x}px, ${posicao.y}px) scale(${escala})`,
+            transition: gesto.current.tipo ? 'none' : 'transform 0.15s ease-out',
+            touchAction: 'none'
+          }}
           onClick={(e) => e.stopPropagation()}
+          onDoubleClick={aoClicarDuasVezes}
+          onTouchStart={aoComecarToque}
+          onTouchMove={aoMoverToque}
+          onTouchEnd={aoSoltarToque}
           onContextMenu={(e) => e.preventDefault()}
+          draggable={false}
         />
       )}
-      <button onClick={onFechar} className="absolute right-4 top-4 text-2xl text-white">✕</button>
+      <button onClick={onFechar} className="absolute right-4 top-4 z-10 text-2xl text-white">✕</button>
+      {escala === 1 && (
+        <p className="absolute bottom-6 left-1/2 -translate-x-1/2 text-xs text-white/70">Belisque pra ampliar</p>
+      )}
     </div>
   )
 }
