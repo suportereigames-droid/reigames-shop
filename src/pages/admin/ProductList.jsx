@@ -14,7 +14,7 @@ const STATUS_LABEL = {
 }
 
 export default function ProductList() {
-  const { isAdmin } = useAuth()
+  const { isAdmin, user } = useAuth()
   const [searchParams, setSearchParams] = useSearchParams()
   const sellerId = searchParams.get('seller')
   const [nomeVendedor, setNomeVendedor] = useState('')
@@ -27,7 +27,13 @@ export default function ProductList() {
       .from('products')
       .select(isAdmin ? 'id, game, title, price, status, media, created_by, profiles(full_name)' : 'id, game, title, price, status, media')
       .order('created_at', { ascending: false })
-    if (sellerId) query = query.eq('created_by', sellerId)
+    // Não dá pra confiar só na RLS aqui: desde que liberamos a contagem
+    // geral de disponíveis pra todo mundo, a RLS passou a deixar
+    // qualquer membro LER contas disponíveis de outras pessoas também —
+    // então filtramos aqui mesmo, pra "Minhas contas" continuar só as
+    // próprias contas de quem não é admin.
+    if (!isAdmin) query = query.eq('created_by', user.id)
+    else if (sellerId) query = query.eq('created_by', sellerId)
     const { data, error } = await query
     if (!error) setProducts(data)
     setLoading(false)

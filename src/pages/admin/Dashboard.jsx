@@ -40,7 +40,7 @@ function BarraJogo({ item, valorMax, corIndex, textoDireita }) {
 }
 
 export default function Dashboard() {
-  const { profile, isAdmin } = useAuth()
+  const { profile, isAdmin, user } = useAuth()
   const [periodo, setPeriodo] = useState('7dias')
   const [stats, setStats] = useState({
     pedidosAbertos: 0, disponivel: 0, vendido: 0, faturado: 0, visitas: 0, porJogo: [], vendasPorJogo: []
@@ -55,7 +55,7 @@ export default function Dashboard() {
       if (corte) pedidosQuery = pedidosQuery.gte('created_at', corte)
 
       const [{ data: produtos }, { data: pedidos }, visitas] = await Promise.all([
-        supabase.from('products').select('status, game'),
+        supabase.from('products').select('status, game, created_by'),
         pedidosQuery,
         isAdmin
           ? (() => {
@@ -66,7 +66,11 @@ export default function Dashboard() {
           : Promise.resolve({ count: null })
       ])
 
-      const disponivel = produtos?.filter((p) => p.status === 'disponivel').length || 0
+      // "Contas disponíveis" no cartão do topo é a visão de trabalho de
+      // cada um: admin vê o total do site, membro vê só as próprias.
+      const disponivel = isAdmin
+        ? produtos?.filter((p) => p.status === 'disponivel').length || 0
+        : produtos?.filter((p) => p.status === 'disponivel' && p.created_by === user?.id).length || 0
       const pedidosPagos = pedidos?.filter((p) => p.status === 'pago') || []
       const vendido = pedidosPagos.length
       const faturado = pedidosPagos.reduce((s, p) => s + Number(p.amount), 0)
@@ -95,7 +99,7 @@ export default function Dashboard() {
       setStats({ disponivel, vendido, faturado, visitas: visitas.count || 0, pedidosAbertos, porJogo, vendasPorJogo })
     }
     load()
-  }, [isAdmin, periodo])
+  }, [isAdmin, periodo, user?.id])
 
   useEffect(() => {
     if (!isAdmin) return
