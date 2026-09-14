@@ -143,10 +143,12 @@ export default function Store() {
     load()
   }, [])
 
-  const categoriasComConta = useMemo(
-    () => categorias.filter((c) => products.some((p) => p.game === c.name)),
-    [categorias, products]
-  )
+  const categoriasComConta = useMemo(() => {
+    return categorias
+      .map((c) => ({ ...c, _total: products.filter((p) => p.game === c.name).length }))
+      .filter((c) => c._total > 0)
+      .sort((a, b) => b._total - a._total)
+  }, [categorias, products])
 
   const porCategoria = game === 'todos' ? products : products.filter((p) => p.game === game)
 
