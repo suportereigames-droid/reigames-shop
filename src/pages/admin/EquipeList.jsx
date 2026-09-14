@@ -46,7 +46,18 @@ function PainelMembro({ membro, onFechar, onAtualizado }) {
         headers: { Authorization: `Bearer ${sessao.session.access_token}` }
       })
       if (error || data?.error) {
-        setError(data?.error || error?.message || 'Não foi possível concluir.')
+        let mensagem = data?.error || error?.message || 'Não foi possível concluir.'
+        // error.message do supabase-js costuma ser só um aviso genérico —
+        // a mensagem de verdade que a função mandou fica dentro da resposta.
+        if (error?.context) {
+          try {
+            const corpo = await error.context.json()
+            if (corpo?.error) mensagem = corpo.error
+          } catch {
+            // corpo não veio em JSON, mantém a mensagem genérica mesmo
+          }
+        }
+        setError(mensagem)
         return false
       }
       return true
