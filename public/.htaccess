@@ -7,8 +7,18 @@
   # preserva o trafego/posicoes que ja existiam no Google.
   # =========================================================
 
-  # Categorias (a maior fatia do trafego antigo)
+  # ---------- Home e listagem geral ----------
   RewriteRule ^collections/all/?$ / [R=301,L]
+
+  # ---------- Categorias com subcategoria especifica (CVs do Clash) ----------
+  RewriteRule ^collections/clash-of-clans-cv-18/?$ /categoria/clash-of-clans/cv-18 [R=301,L]
+  RewriteRule ^collections/clashofclans-cv-17/?$ /categoria/clash-of-clans/cv-17 [R=301,L]
+  RewriteRule ^collections/clash-of-clans-cv-17/?$ /categoria/clash-of-clans/cv-17 [R=301,L]
+  RewriteRule ^collections/clashofclans-cv-16/?$ /categoria/clash-of-clans/cv-16 [R=301,L]
+  RewriteRule ^collections/clashofclans-cv-15/?$ /categoria/clash-of-clans/cv-15 [R=301,L]
+  RewriteRule ^collections/clashofclans-cv-14/?$ /categoria/clash-of-clans/cv-14 [R=301,L]
+
+  # ---------- Categorias gerais ----------
   RewriteRule ^collections/clash-of-clans/?$ /categoria/clash-of-clans [R=301,L]
   RewriteRule ^collections/clashofclans-cv-1[0-9]/?$ /categoria/clash-of-clans [R=301,L]
   RewriteRule ^collections/clash-of-clans-cv-1[0-9]/?$ /categoria/clash-of-clans [R=301,L]
@@ -17,8 +27,37 @@
   RewriteRule ^collections/clash-royale/?$ /categoria/clash-royale [R=301,L]
   RewriteRule ^collections/brawl-stars/?$ /categoria/brawl-stars [R=301,L]
   RewriteRule ^collections/wartune-ultra/?$ /categoria/wartune-ultra [R=301,L]
-  RewriteRule ^collections/call-of-duty-mobile/?$ /categoria/call-of-duty-mobile [R=301,L]
   RewriteRule ^collections/hay-day/?$ /categoria/hay-day [R=301,L]
+
+  # ---------- Blog de grupos WhatsApp (viraram Paginas customizadas) ----------
+  RewriteRule ^blogs/grupo-whatsapp/efootball/?$ /pagina/grupo-whatsapp-efootball [R=301,L]
+  RewriteRule ^blogs/grupo-whatsapp/wartune-ultra/?$ /pagina/grupo-whatsapp-wartune-ultra [R=301,L]
+  RewriteRule ^blogs/grupo-whatsapp/hay-day/?$ /pagina/grupo-whatsapp-hay-day [R=301,L]
+  RewriteRule ^blogs/grupo-whatsapp/clash-of-clans-clash-royale-brawl-stars/?$ /pagina/grupo-whatsapp-clash-of-clans-clash-royale-brawl-stars [R=301,L]
+  RewriteRule ^blogs/grupo-whatsapp/?$ /pagina/grupos-whatsapp [R=301,L]
+
+  # ---------- Paginas fixas (termos, contato, etc.) ----------
+  RewriteRule ^pages/contato/?$ /pagina/contato [R=301,L]
+  RewriteRule ^pages/perguntas-frequentes/?$ /pagina/perguntas-frequentes [R=301,L]
+  RewriteRule ^pages/rei-games-e-confiavel/?$ /pagina/rei-games-e-confiavel [R=301,L]
+  RewriteRule ^pages/termo-de-intermediacao-efootball/?$ /pagina/termo-intermediacao-efootball [R=301,L]
+  RewriteRule ^pages/termo-intermediacao-rei-games/?$ /pagina/termo-intermediacao-rei-games [R=301,L]
+  RewriteRule ^pages/termo-de-intermediacao-wartune-ultra/?$ /pagina/termo-de-intermediacao-wartune-ultra [R=301,L]
+  RewriteRule ^pages/termo-parcelamento-pix/?$ /pagina/termo-parcelamento-pix [R=301,L]
+  RewriteRule ^pages/grupos-whatsapp-mika/?$ /pagina/grupos-whatsapp-mika [R=301,L]
+  RewriteRule ^pages/grupos-whatsapp-mineirinha/?$ /pagina/grupos-whatsapp-mineirinha [R=301,L]
+
+  # ---------- Lojas pessoais / parcerias ----------
+  RewriteRule ^collections/mika/?$ /mika [R=301,L]
+  RewriteRule ^collections/mineirinha/?$ /mineirinha [R=301,L]
+
+  # ---------- Conta do cliente ----------
+  RewriteRule ^account/login/?$ /minha-conta [R=301,L]
+
+  # ---------- Coisas antigas sem equivalente hoje (manda pra home) ----------
+  RewriteRule ^collections/software-e-licencas/?$ / [R=301,L]
+  RewriteRule ^products/tema-evolution-9-2-shopify-entrega-automatica/?$ / [R=301,L]
+  RewriteRule ^policies/privacy-policy/?$ / [R=301,L]
 
   # ---------- SPA: qualquer outra rota cai no index.html ----------
   RewriteRule ^index\.html$ - [L]
