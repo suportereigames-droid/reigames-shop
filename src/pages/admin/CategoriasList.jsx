@@ -36,6 +36,15 @@ export default function CategoriasList() {
     load()
   }
 
+  async function moverCategoria(index, direcao) {
+    const nova = [...categorias]
+    const destino = index + direcao
+    if (destino < 0 || destino >= nova.length) return
+    ;[nova[index], nova[destino]] = [nova[destino], nova[index]]
+    setCategorias(nova)
+    await Promise.all(nova.map((c, i) => supabase.from('categories').update({ sort_order: i }).eq('id', c.id)))
+  }
+
   async function excluirCategoria(categoria) {
     if (!confirm(`Apagar "${categoria.name}"? As subcategorias dela também somem.`)) return
     await supabase.from('categories').delete().eq('id', categoria.id)
@@ -92,7 +101,8 @@ export default function CategoriasList() {
       <h1 className="text-2xl font-bold text-ink">Categorias e subcategorias</h1>
       <p className="mt-1 text-sm text-mist">
         Usadas no cadastro de contas e nos filtros do site. Cada uma pode ter uma imagem (o ícone
-        redondo que aparece na home).
+        redondo que aparece na home). Use as setinhas ▲▼ pra mudar a ordem — é a mesma ordem que
+        aparece na home do site.
       </p>
 
       <div className="mt-6 flex gap-2">
@@ -107,12 +117,28 @@ export default function CategoriasList() {
       {error && <p className="mt-2 text-sm text-ember">{error}</p>}
 
       <div className="mt-6 space-y-3">
-        {categorias.map((cat) => (
+        {categorias.map((cat, i) => (
           <div key={cat.id} className="rounded border border-line">
             <div className="flex w-full items-center justify-between p-3">
+              <div className="flex flex-col">
+                <button
+                  disabled={i === 0}
+                  onClick={() => moverCategoria(i, -1)}
+                  className="text-xs leading-none text-mist disabled:opacity-20"
+                >
+                  ▲
+                </button>
+                <button
+                  disabled={i === categorias.length - 1}
+                  onClick={() => moverCategoria(i, 1)}
+                  className="text-xs leading-none text-mist disabled:opacity-20"
+                >
+                  ▼
+                </button>
+              </div>
               <button
                 onClick={() => setCategoriaAberta(categoriaAberta === cat.id ? null : cat.id)}
-                className="flex flex-1 items-center gap-3 text-left"
+                className="flex flex-1 items-center gap-3 pl-3 text-left"
               >
                 {cat.image_url ? (
                   <img src={cat.image_url} alt="" className="h-10 w-10 rounded-full object-cover" />
