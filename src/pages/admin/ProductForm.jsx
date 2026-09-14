@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
 import { useAuth } from '../../context/AuthContext.jsx'
+import SelectCustomizado from '../../components/SelectCustomizado.jsx'
 
 const BUCKET = 'product-images'
 
@@ -158,9 +159,11 @@ export default function ProductForm() {
       <form onSubmit={handleSubmit} className="mt-6 space-y-4">
         <div>
           <label className="mb-1 block text-sm text-mist">Categoria</label>
-          <select className="input" value={form.game} onChange={(e) => setForm({ ...form, game: e.target.value, subcategory: '' })}>
-            {categorias.map((c) => <option key={c.id} value={c.name}>{c.name}</option>)}
-          </select>
+          <SelectCustomizado
+            value={form.game}
+            onChange={(v) => setForm({ ...form, game: v, subcategory: '' })}
+            opcoes={categorias.map((c) => ({ value: c.name, label: c.name }))}
+          />
           {categorias.length === 0 && (
             <p className="mt-1 text-xs text-mist">Nenhuma categoria cadastrada — crie uma no app, na aba Site.</p>
           )}
@@ -169,10 +172,11 @@ export default function ProductForm() {
         {subcategorias.length > 0 && (
           <div>
             <label className="mb-1 block text-sm text-mist">Subcategoria (opcional)</label>
-            <select className="input" value={form.subcategory} onChange={(e) => setForm({ ...form, subcategory: e.target.value })}>
-              <option value="">Nenhuma</option>
-              {subcategorias.map((s) => <option key={s.id} value={s.name}>{s.name}</option>)}
-            </select>
+            <SelectCustomizado
+              value={form.subcategory}
+              onChange={(v) => setForm({ ...form, subcategory: v })}
+              opcoes={[{ value: '', label: 'Nenhuma' }, ...subcategorias.map((s) => ({ value: s.name, label: s.name }))]}
+            />
           </div>
         )}
 
@@ -221,22 +225,26 @@ export default function ProductForm() {
 
         <div>
           <label className="mb-1 block text-sm text-mist">Status</label>
-          <select className="input" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-            <option value="disponivel">Disponível</option>
-            <option value="reservado">Reservado</option>
-            <option value="vendido">Vendido</option>
-            <option value="oculto">Oculto</option>
-          </select>
+          <SelectCustomizado
+            value={form.status}
+            onChange={(v) => setForm({ ...form, status: v })}
+            opcoes={[
+              { value: 'disponivel', label: 'Disponível' },
+              { value: 'reservado', label: 'Reservado' },
+              { value: 'vendido', label: 'Vendido' },
+              { value: 'oculto', label: 'Oculto' }
+            ]}
+          />
         </div>
 
         {isAdmin && isEditing && membros.length > 0 && (
           <div>
             <label className="mb-1 block text-sm text-mist">Essa conta é de quem?</label>
-            <select className="input" value={donoId} onChange={(e) => setDonoId(e.target.value)}>
-              {membros.map((m) => (
-                <option key={m.id} value={m.id}>{m.full_name}</option>
-              ))}
-            </select>
+            <SelectCustomizado
+              value={donoId}
+              onChange={setDonoId}
+              opcoes={membros.map((m) => ({ value: m.id, label: m.full_name }))}
+            />
             <p className="mt-1 text-xs text-mist">
               Útil pra corrigir contas importadas em massa que caíram todas no seu nome.
             </p>
