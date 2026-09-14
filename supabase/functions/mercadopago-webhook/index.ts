@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
 
     if (order && novoStatus === 'pago') {
       await supabase.from('products').update({ status: 'vendido' }).eq('id', order.product_id)
+      notificarPagamentoConfirmado(supabase, order).catch(() => {})
     }
 
     return new Response('ok', { status: 200 })
@@ -68,3 +69,29 @@ Deno.serve(async (req) => {
     return new Response(`erro: ${err}`, { status: 500 })
   }
 })
+
+async function notificarPagamentoConfirmado(supabase: any, order: any) {
+  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin')
+  const idsParaNotificar = new Set([order.seller_id, ...(admins || []).map((a: any) => a.id)])
+
+  const { data: tokens } = await supabase
+    .from('push_tokens')
+    .select('expo_token')
+    .in('user_id', Array.from(idsParaNotificar))
+
+  if (!tokens?.length) return
+
+  const mensagens = tokens.map((t: any) => ({
+    to: t.expo_token,
+    sound: 'default',
+    title: 'Pagamento confirmado! 💰',
+    body: `${order.product_title} — ${order.buyer_name} pagou R$ ${Number(order.amount).toFixed(2).replace('.', ',')}`,
+    data: { orderId: order.id }
+  }))
+
+  await fetch('https://exp.host/--/api/v2/push/send', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(mensagens)
+  })
+}
