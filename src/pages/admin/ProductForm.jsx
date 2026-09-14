@@ -76,15 +76,53 @@ export default function ProductForm() {
       .then(({ data }) => setSubcategorias(data || []))
   }, [form.game, categorias])
 
-  function adicionarArquivos(fileList) {
-    const novos = Array.from(fileList).map((file) => ({
-      id: `novo-${Date.now()}-${Math.random()}`,
-      kind: 'novo',
-      type: file.type.startsWith('video') ? 'video' : 'image',
-      file,
-      url: URL.createObjectURL(file)
-    }))
-    setItens((prev) => [...prev, ...novos])
+  // Corta a foto pro centro, num quadrado, e redimensiona pra no máximo
+  // 1080x1080 — assim toda conta fica com o mesmo padrão, não importa o
+  // formato original da foto que cada pessoa da equipe mandar.
+  function recortarQuadrado(file) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        const lado = Math.min(img.width, img.height)
+        const origemX = (img.width - lado) / 2
+        const origemY = (img.height - lado) / 2
+        const tamanhoFinal = Math.min(1080, lado)
+        const canvas = document.createElement('canvas')
+        canvas.width = tamanhoFinal
+        canvas.height = tamanhoFinal
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, origemX, origemY, lado, lado, 0, 0, tamanhoFinal, tamanhoFinal)
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(img.src)
+          if (blob) resolve(blob)
+          else reject(new Error('Não foi possível processar a imagem.'))
+        }, 'image/jpeg', 0.9)
+      }
+      img.onerror = () => reject(new Error('Não foi possível carregar a imagem.'))
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
+  async function adicionarArquivos(fileList) {
+    for (const file of Array.from(fileList)) {
+      const ehVideo = file.type.startsWith('video')
+      let arquivoFinal = file
+      if (!ehVideo) {
+        try {
+          arquivoFinal = await recortarQuadrado(file)
+        } catch {
+          arquivoFinal = file // se der algum problema no recorte, usa a foto original mesmo
+        }
+      }
+      const item = {
+        id: `novo-${Date.now()}-${Math.random()}`,
+        kind: 'novo',
+        type: ehVideo ? 'video' : 'image',
+        file: arquivoFinal,
+        url: URL.createObjectURL(arquivoFinal)
+      }
+      setItens((prev) => [...prev, item])
+    }
   }
 
   async function removerItem(item) {
@@ -114,7 +152,8 @@ export default function ProductForm() {
         if (item.kind === 'existente') {
           mediaFinal.push({ type: item.type, path: item.path, url: item.url })
         } else {
-          const path = `${user.id}/${Date.now()}-${item.file.name}`
+          const nomeArquivo = item.file.name || `foto-${item.id}.jpg`
+          const path = `${user.id}/${Date.now()}-${nomeArquivo}`
           const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, item.file)
           if (uploadError) throw uploadError
           const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)

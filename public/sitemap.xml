@@ -4,4 +4,11 @@
     <loc>https://reigames.com.br/</loc>
     <priority>1.0</priority>
   </url>
+  <url><loc>https://reigames.com.br/categoria/clash-of-clans</loc></url>
+  <url><loc>https://reigames.com.br/categoria/clash-royale</loc></url>
+  <url><loc>https://reigames.com.br/categoria/brawl-stars</loc></url>
+  <url><loc>https://reigames.com.br/categoria/efootball</loc></url>
+  <url><loc>https://reigames.com.br/categoria/call-of-duty-mobile</loc></url>
+  <url><loc>https://reigames.com.br/categoria/hay-day</loc></url>
+  <url><loc>https://reigames.com.br/categoria/wartune-ultra</loc></url>
 </urlset>

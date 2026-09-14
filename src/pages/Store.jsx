@@ -1,8 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import ProductCard from '../components/ProductCard.jsx'
 import { useSEO } from '../lib/useSEO.js'
+
+function slugify(texto) {
+  return texto
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
+}
 
 function embaralhar(lista) {
   const copia = [...lista]
@@ -135,10 +143,8 @@ function LinhaComSetas({ children }) {
 }
 
 export default function Store() {
-  useSEO(
-    'REI GAMES — Contas verificadas de EFOOTBALL, Clash of Clans, Clash Royale e mais',
-    'Compre e venda contas de jogos com garantia e entrega segura. Parcelamento no cartão e mediação segura.'
-  )
+  const { slugCategoria } = useParams()
+  const navigate = useNavigate()
 
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -152,6 +158,15 @@ export default function Store() {
   const [taxasParcelas, setTaxasParcelas] = useState(null)
   const [game, setGame] = useState('todos')
   const [subcategoria, setSubcategoria] = useState('todas')
+
+  useSEO(
+    game !== 'todos'
+      ? `Contas de ${game} — REI GAMES`
+      : 'REI GAMES — Contas verificadas de EFOOTBALL, Clash of Clans, Clash Royale e mais',
+    game !== 'todos'
+      ? `Compre contas de ${game} com garantia e entrega segura. Parcelamento no cartão e mediação segura.`
+      : 'Compre e venda contas de jogos com garantia e entrega segura. Parcelamento no cartão e mediação segura.'
+  )
 
   useEffect(() => {
     async function load() {
@@ -185,6 +200,19 @@ export default function Store() {
     load()
   }, [])
 
+  // Mantém a categoria selecionada sincronizada com a URL — tanto ao
+  // carregar direto num link de categoria quanto ao usar o "voltar" do
+  // navegador.
+  useEffect(() => {
+    if (categorias.length === 0) return
+    if (!slugCategoria) {
+      setGame('todos')
+      return
+    }
+    const encontrada = categorias.find((c) => slugify(c.name) === slugCategoria)
+    if (encontrada) setGame(encontrada.name)
+  }, [slugCategoria, categorias])
+
   const categoriasComConta = useMemo(() => {
     return categorias
       .map((c) => ({ ...c, _total: products.filter((p) => p.game === c.name).length }))
@@ -207,6 +235,7 @@ export default function Store() {
   function mudarCategoria(nomeCategoria) {
     setGame(nomeCategoria)
     setSubcategoria('todas')
+    navigate(nomeCategoria === 'todos' ? '/' : `/categoria/${slugify(nomeCategoria)}`)
   }
 
   return (

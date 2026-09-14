@@ -30,6 +30,7 @@ export default function App() {
       {/* Loja pública */}
       <Route element={<StoreLayout />}>
         <Route path="/" element={<Store />} />
+        <Route path="/categoria/:slugCategoria" element={<Store />} />
         <Route path="/produto/:id" element={<ProductDetail />} />
         <Route path="/checkout/:id" element={<Checkout />} />
         <Route path="/checkout/status" element={<CheckoutStatus />} />

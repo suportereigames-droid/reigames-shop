@@ -1,6 +1,26 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+
+  # =========================================================
+  # Redirecionamentos do site antigo (Shopify) pro site novo —
+  # preserva o trafego/posicoes que ja existiam no Google.
+  # =========================================================
+
+  # Categorias (a maior fatia do trafego antigo)
+  RewriteRule ^collections/all/?$ / [R=301,L]
+  RewriteRule ^collections/clash-of-clans/?$ /categoria/clash-of-clans [R=301,L]
+  RewriteRule ^collections/clashofclans-cv-1[0-9]/?$ /categoria/clash-of-clans [R=301,L]
+  RewriteRule ^collections/clash-of-clans-cv-1[0-9]/?$ /categoria/clash-of-clans [R=301,L]
+  RewriteRule ^collections/clashofclans-cla/?$ /categoria/clash-of-clans [R=301,L]
+  RewriteRule ^collections/efootball/?$ /categoria/efootball [R=301,L]
+  RewriteRule ^collections/clash-royale/?$ /categoria/clash-royale [R=301,L]
+  RewriteRule ^collections/brawl-stars/?$ /categoria/brawl-stars [R=301,L]
+  RewriteRule ^collections/wartune-ultra/?$ /categoria/wartune-ultra [R=301,L]
+  RewriteRule ^collections/call-of-duty-mobile/?$ /categoria/call-of-duty-mobile [R=301,L]
+  RewriteRule ^collections/hay-day/?$ /categoria/hay-day [R=301,L]
+
+  # ---------- SPA: qualquer outra rota cai no index.html ----------
   RewriteRule ^index\.html$ - [L]
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
