@@ -2,6 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Protege toda imagem do site contra o menu de "segurar e salvar" no
+   celular (o toque longo). O clique direito no computador já é
+   bloqueado via JS, em main.jsx. */
+img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 @keyframes rolar-esquerda {
   from { transform: translateX(0%); }
   to { transform: translateX(-50%); }
