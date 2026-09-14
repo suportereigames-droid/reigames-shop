@@ -77,10 +77,17 @@ function FrasesRotativas({ texto, velocidade }) {
     // A largura de "uma volta completa" é metade do conteúdo (já que
     // duplicamos as frases duas vezes ali embaixo), medida de verdade em
     // pixels — assim a rolagem nunca desalinha nem dá salto ao repetir.
-    larguraUmaVoltaRef.current = elemento.scrollWidth / 2
-    posicaoRef.current = 0
+    // Remedimos sempre que o tamanho mudar (ex: emoji/fonte que termina
+    // de carregar depois da primeira medição), pra nunca ficar errado.
+    function remedir() {
+      larguraUmaVoltaRef.current = elemento.scrollWidth / 2
+    }
+    remedir()
+    const observador = new ResizeObserver(remedir)
+    observador.observe(elemento)
 
-    const pixelsPorSegundo = larguraUmaVoltaRef.current / (velocidade || 20)
+    posicaoRef.current = 0
+    const pixelsPorSegundo = () => larguraUmaVoltaRef.current / (velocidade || 20)
     let ultimoTempo = null
 
     function passo(tempoAtual) {
@@ -88,8 +95,8 @@ function FrasesRotativas({ texto, velocidade }) {
       const delta = (tempoAtual - ultimoTempo) / 1000
       ultimoTempo = tempoAtual
 
-      posicaoRef.current += pixelsPorSegundo * delta
-      if (posicaoRef.current >= larguraUmaVoltaRef.current) {
+      posicaoRef.current += pixelsPorSegundo() * delta
+      if (larguraUmaVoltaRef.current > 0 && posicaoRef.current >= larguraUmaVoltaRef.current) {
         posicaoRef.current -= larguraUmaVoltaRef.current
       }
       if (elemento) elemento.style.transform = `translateX(-${posicaoRef.current}px)`
@@ -99,6 +106,7 @@ function FrasesRotativas({ texto, velocidade }) {
 
     return () => {
       if (quadroRef.current) cancelAnimationFrame(quadroRef.current)
+      observador.disconnect()
     }
   }, [frases, velocidade])
 

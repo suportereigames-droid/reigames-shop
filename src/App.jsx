@@ -12,7 +12,7 @@ import AdminLayout from './components/AdminLayout.jsx'
 import Dashboard from './pages/admin/Dashboard.jsx'
 import ProductList from './pages/admin/ProductList.jsx'
 import ProductForm from './pages/admin/ProductForm.jsx'
-import MinhaLoja from './pages/admin/MinhaLoja.jsx'
+import Perfil from './pages/admin/Perfil.jsx'
 import Aparencia from './pages/admin/Aparencia.jsx'
 import PaginasList from './pages/admin/PaginasList.jsx'
 import PaginaForm from './pages/admin/PaginaForm.jsx'
@@ -55,7 +55,7 @@ export default function App() {
         <Route path="produtos" element={<ProductList />} />
         <Route path="produtos/novo" element={<ProductForm />} />
         <Route path="produtos/:id" element={<ProductForm />} />
-        <Route path="minha-loja" element={<MinhaLoja />} />
+        <Route path="perfil" element={<Perfil />} />
         <Route path="aparencia" element={<Aparencia />} />
         <Route path="paginas" element={<PaginasList />} />
         <Route path="paginas/nova" element={<PaginaForm />} />

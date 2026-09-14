@@ -15,7 +15,7 @@ export default function SellerPage() {
       setLoading(true)
       const { data: seller, error } = await supabase
         .from('seller_pages')
-        .select('seller_id, slug, display_name, titulo, logo_url, frases, banner_text, banner_video_url')
+        .select('seller_id, slug, display_name, titulo, logo_url, frases')
         .eq('slug', slug)
         .single()
 
@@ -43,12 +43,7 @@ export default function SellerPage() {
 
   return (
     <div className="mx-auto max-w-6xl px-4 py-10">
-      {pagina.banner_video_url && (
-        <video src={pagina.banner_video_url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture className="mb-6 aspect-video w-full rounded-lg bg-panel2" />
-      )}
-
       <h1 className="text-3xl font-bold text-ink md:text-4xl">{pagina.titulo || pagina.display_name}</h1>
-      {pagina.banner_text && <p className="mt-2 max-w-xl text-mist">{pagina.banner_text}</p>}
 
       {(pagina.logo_url || pagina.frases) && (
         <div className="mt-4 flex flex-wrap items-center gap-4">
