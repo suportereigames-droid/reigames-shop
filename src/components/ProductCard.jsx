@@ -18,10 +18,10 @@ export default function ProductCard({ product, taxas }) {
   return (
     <Link
       to={`/produto/${product.id}`}
-      className="card group relative overflow-hidden transition-colors hover:border-gold/60"
+      className="card group relative flex h-full flex-col overflow-hidden transition-colors hover:border-gold/60"
     >
       {temDesconto && (
-        <span className="absolute left-1.5 top-1.5 z-10 rounded bg-emerald px-1.5 py-0.5 text-[9px] font-bold text-white">
+        <span className="absolute left-1.5 top-1.5 z-10 rounded bg-emerald px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">
           {percentualOff}% OFF
         </span>
       )}
@@ -34,15 +34,19 @@ export default function ProductCard({ product, taxas }) {
           <img src={capa.url} alt={product.title} className="h-full w-full object-contain transition-transform group-hover:scale-105" />
         )}
       </div>
-      <div className="p-2.5 sm:p-4">
-        <h3 className="line-clamp-5 text-[11px] font-semibold leading-snug text-ink sm:text-xs">{product.title}</h3>
-        <div className="mt-1.5">
+      <div className="flex flex-1 flex-col p-2.5 sm:p-4">
+        <h3 className="line-clamp-4 text-sm font-semibold leading-snug text-ink">{product.title}</h3>
+
+        <div className="mt-auto pt-2">
           {temDesconto && (
             <p className="text-xs text-mist line-through">{money(product.compare_price)}</p>
           )}
-          <p className="text-base font-bold text-ink sm:text-lg">{money(product.price)}</p>
+          <p className="text-lg font-bold text-ink sm:text-xl">{money(product.price)}</p>
           {maxParcelas > 1 && (
-            <p className="text-[10px] text-mist">em {maxParcelas}x de {money(valorParcela)}</p>
+            <p className="text-xs text-mist">
+              em <span className="font-semibold text-ink">{maxParcelas}x</span> de{' '}
+              <span className="font-semibold text-ink">{money(valorParcela)}</span>
+            </p>
           )}
         </div>
       </div>
