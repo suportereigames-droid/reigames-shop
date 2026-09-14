@@ -64,15 +64,49 @@ function BannerCarousel({ slides, intervalo }) {
 
 function FrasesRotativas({ texto, velocidade }) {
   const frases = useMemo(() => (texto || '').split('\n').map((f) => f.trim()).filter(Boolean), [texto])
+  const trilhoRef = useRef(null)
+  const larguraUmaVoltaRef = useRef(0)
+  const posicaoRef = useRef(0)
+  const quadroRef = useRef(null)
+
+  useEffect(() => {
+    if (frases.length === 0) return
+    const elemento = trilhoRef.current
+    if (!elemento) return
+
+    // A largura de "uma volta completa" é metade do conteúdo (já que
+    // duplicamos as frases duas vezes ali embaixo), medida de verdade em
+    // pixels — assim a rolagem nunca desalinha nem dá salto ao repetir.
+    larguraUmaVoltaRef.current = elemento.scrollWidth / 2
+    posicaoRef.current = 0
+
+    const pixelsPorSegundo = larguraUmaVoltaRef.current / (velocidade || 20)
+    let ultimoTempo = null
+
+    function passo(tempoAtual) {
+      if (ultimoTempo === null) ultimoTempo = tempoAtual
+      const delta = (tempoAtual - ultimoTempo) / 1000
+      ultimoTempo = tempoAtual
+
+      posicaoRef.current += pixelsPorSegundo * delta
+      if (posicaoRef.current >= larguraUmaVoltaRef.current) {
+        posicaoRef.current -= larguraUmaVoltaRef.current
+      }
+      if (elemento) elemento.style.transform = `translateX(-${posicaoRef.current}px)`
+      quadroRef.current = requestAnimationFrame(passo)
+    }
+    quadroRef.current = requestAnimationFrame(passo)
+
+    return () => {
+      if (quadroRef.current) cancelAnimationFrame(quadroRef.current)
+    }
+  }, [frases, velocidade])
 
   if (frases.length === 0) return null
 
   return (
     <div className="mb-6 overflow-hidden bg-white py-2.5">
-      <div
-        className="flex whitespace-nowrap"
-        style={{ animation: `rolar-esquerda ${velocidade || 20}s linear infinite` }}
-      >
+      <div ref={trilhoRef} className="flex whitespace-nowrap will-change-transform">
         {[...frases, ...frases].map((frase, i) => (
           <span key={i} className="flex items-center text-sm font-medium text-ink">
             {frase}
