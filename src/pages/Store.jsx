@@ -143,7 +143,7 @@ function LinhaComSetas({ children }) {
 }
 
 export default function Store() {
-  const { slugCategoria } = useParams()
+  const { slugCategoria, slugSubcategoria } = useParams()
   const navigate = useNavigate()
 
   const [products, setProducts] = useState([])
@@ -213,6 +213,18 @@ export default function Store() {
     if (encontrada) setGame(encontrada.name)
   }, [slugCategoria, categorias])
 
+  // Mesma lógica pra subcategoria: sincroniza com a URL assim que ela e
+  // as subcategorias do banco estiverem disponíveis.
+  useEffect(() => {
+    if (subcategoriasBanco.length === 0) return
+    if (!slugSubcategoria) {
+      setSubcategoria('todas')
+      return
+    }
+    const encontrada = subcategoriasBanco.find((s) => slugify(s.name) === slugSubcategoria)
+    if (encontrada) setSubcategoria(encontrada.name)
+  }, [slugSubcategoria, subcategoriasBanco])
+
   const categoriasComConta = useMemo(() => {
     return categorias
       .map((c) => ({ ...c, _total: products.filter((p) => p.game === c.name).length }))
@@ -236,6 +248,12 @@ export default function Store() {
     setGame(nomeCategoria)
     setSubcategoria('todas')
     navigate(nomeCategoria === 'todos' ? '/' : `/categoria/${slugify(nomeCategoria)}`)
+  }
+
+  function mudarSubcategoria(nomeSubcategoria) {
+    setSubcategoria(nomeSubcategoria)
+    const baseCategoria = `/categoria/${slugify(game)}`
+    navigate(nomeSubcategoria === 'todas' ? baseCategoria : `${baseCategoria}/${slugify(nomeSubcategoria)}`)
   }
 
   return (
@@ -269,13 +287,13 @@ export default function Store() {
       {game !== 'todos' && subcategoriasDaCategoria.length > 0 && (
         <section className="mb-6">
           <LinhaComSetas>
-            <button onClick={() => setSubcategoria('todas')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
+            <button onClick={() => mudarSubcategoria('todas')} className="flex flex-shrink-0 flex-col items-center gap-1.5">
               <div className={`flex h-[52px] w-[52px] items-center justify-center rounded-full border-2 text-[10px] font-bold text-mist ${subcategoria === 'todas' ? 'border-emerald' : 'border-line'}`}>
                 Todas
               </div>
             </button>
             {subcategoriasDaCategoria.map((s) => (
-              <button key={s.id} onClick={() => setSubcategoria(s.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
+              <button key={s.id} onClick={() => mudarSubcategoria(s.name)} className="flex flex-shrink-0 flex-col items-center gap-1.5">
                 <div className={`h-[52px] w-[52px] overflow-hidden rounded-full border-2 ${subcategoria === s.name ? 'border-emerald' : 'border-line'}`}>
                   {s.image_url ? (
                     <img src={s.image_url} alt={s.name} className="h-full w-full object-cover" />
