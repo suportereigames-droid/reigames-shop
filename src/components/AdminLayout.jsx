@@ -41,7 +41,7 @@ export default function AdminLayout() {
         </nav>
         <button onClick={handleSignOut} className="btn-ghost mt-8 w-full text-sm">Sair</button>
       </aside>
-      <main className="flex-1 p-6">
+      <main className="min-w-0 flex-1 p-6">
         <Outlet />
       </main>
     </div>
