@@ -61,6 +61,19 @@ export default function CustomPage() {
         tabela.parentNode.insertBefore(envoltorio, tabela)
         envoltorio.appendChild(tabela)
       })
+
+      // As imagens demoram um pouco pra carregar (principalmente vindo de
+      // fora, tipo Cloudinary/Shopify) — remedimos de novo assim que cada
+      // uma terminar, senão a altura fica menor que o conteúdo de
+      // verdade e a parte de baixo (ou o topo, dependendo do layout)
+      // acaba cortada.
+      doc?.querySelectorAll('img').forEach((img) => {
+        if (!img.complete) {
+          img.addEventListener('load', () => {
+            if (doc.body) setAltura(doc.body.scrollHeight + 40)
+          })
+        }
+      })
     } catch {
       // se por algum motivo não der pra medir/ajustar, mantém como está
     }
@@ -76,7 +89,7 @@ export default function CustomPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body { margin: 0; padding: 0; max-width: 100vw; overflow-x: hidden; }
+    html, body { margin: 0 !important; padding: 0 !important; max-width: 100vw; overflow-x: hidden; height: auto !important; min-height: 0 !important; }
     img { max-width: 100%; height: auto; }
     table { max-width: 100%; }
     * { box-sizing: border-box; }
