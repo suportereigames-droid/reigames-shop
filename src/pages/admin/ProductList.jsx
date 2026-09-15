@@ -20,6 +20,10 @@ export default function ProductList() {
   const [nomeVendedor, setNomeVendedor] = useState('')
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
+  const [membros, setMembros] = useState([])
+  const [categorias, setCategorias] = useState([])
+  const [filtroJogo, setFiltroJogo] = useState('todos')
+  const [filtroStatus, setFiltroStatus] = useState('todos')
 
   async function load() {
     setLoading(true)
@@ -50,21 +54,12 @@ export default function ProductList() {
     }
   }, [sellerId])
 
-  async function simularCompra(product) {
-    if (!confirm(`Simular uma compra da conta "${product.title}"? Isso cria um pedido de teste e dispara as notificações (pedido novo + pagamento confirmado).`)) return
-    const { data: sessao } = await supabase.auth.getSession()
-    const resposta = await fetch(`${supabase.supabaseUrl}/functions/v1/simulate-test-payment`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${sessao.session.access_token}`,
-        apikey: supabase.supabaseKey
-      },
-      body: JSON.stringify({ productId: product.id })
-    })
-    const corpo = await resposta.json().catch(() => null)
-    alert(resposta.ok ? corpo.mensagem : `Não foi possível: ${corpo?.error || `Erro ${resposta.status}`}`)
-  }
+  useEffect(() => {
+    supabase.from('categories').select('name').order('sort_order').then(({ data }) => setCategorias(data || []))
+    if (isAdmin) {
+      supabase.from('profiles').select('id, full_name').order('full_name').then(({ data }) => setMembros(data || []))
+    }
+  }, [isAdmin])
 
   async function handleDelete(product) {
     if (!confirm('Remover esta conta do catálogo? As fotos e vídeos dela também serão apagados.')) return
@@ -84,51 +79,74 @@ export default function ProductList() {
     load()
   }
 
-  async function excluirTodasOcultas() {
-    const ocultas = products.filter((p) => p.status === 'oculto')
-    if (ocultas.length === 0) return
-    if (!confirm(`Apagar as ${ocultas.length} contas ocultas de uma vez? As fotos/vídeos delas também são apagados. Isso não pode ser desfeito.`)) return
-
-    const erros = []
-    for (const p of ocultas) {
-      const paths = (p.media || []).map((m) => m.path).filter(Boolean)
-      if (paths.length) await supabase.storage.from(BUCKET).remove(paths)
-      const { error } = await supabase.from('products').delete().eq('id', p.id)
-      if (error) erros.push(`${p.title}: ${error.message}`)
-    }
-    if (erros.length) alert('Algumas não puderam ser excluídas:\n\n' + erros.join('\n'))
-    load()
+  function mudarMembro(valor) {
+    const novo = new URLSearchParams(searchParams)
+    if (valor === 'todos') novo.delete('seller')
+    else novo.set('seller', valor)
+    setSearchParams(novo)
   }
+
+  const filtrados = products.filter((p) => {
+    if (filtroJogo !== 'todos' && p.game !== filtroJogo) return false
+    if (filtroStatus !== 'todos' && p.status !== filtroStatus) return false
+    return true
+  })
 
   return (
     <div>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="text-2xl font-bold text-ink">
           {sellerId ? `Contas de ${nomeVendedor}` : isAdmin ? 'Todas as contas' : 'Minhas contas'}
         </h1>
-        <div className="flex items-center gap-3">
-          {products.some((p) => p.status === 'oculto') && (
-            <button onClick={excluirTodasOcultas} className="text-sm text-ember hover:underline">
-              Excluir todas as ocultas ({products.filter((p) => p.status === 'oculto').length})
-            </button>
-          )}
-          <Link to="/admin/produtos/novo" className="btn-primary">+ Nova conta</Link>
-        </div>
+        <Link to="/admin/produtos/novo" className="btn-primary whitespace-nowrap">+ Nova conta</Link>
       </div>
 
-      {sellerId && (
-        <button onClick={() => setSearchParams({})} className="mt-2 text-sm text-mist underline">
-          Limpar filtro
-        </button>
-      )}
+      <div className="mt-4 flex flex-wrap gap-3">
+        <select
+          className="input w-auto min-w-[140px] text-sm"
+          value={filtroJogo}
+          onChange={(e) => setFiltroJogo(e.target.value)}
+        >
+          <option value="todos">Todos os jogos</option>
+          {categorias.map((c) => (
+            <option key={c.name} value={c.name}>{c.name}</option>
+          ))}
+        </select>
+
+        <select
+          className="input w-auto min-w-[140px] text-sm"
+          value={filtroStatus}
+          onChange={(e) => setFiltroStatus(e.target.value)}
+        >
+          <option value="todos">Todos os status</option>
+          {Object.entries(STATUS_LABEL).map(([valor, { texto }]) => (
+            <option key={valor} value={valor}>{texto}</option>
+          ))}
+        </select>
+
+        {isAdmin && (
+          <select
+            className="input w-auto min-w-[160px] text-sm"
+            value={sellerId || 'todos'}
+            onChange={(e) => mudarMembro(e.target.value)}
+          >
+            <option value="todos">Todos os membros</option>
+            {membros.map((m) => (
+              <option key={m.id} value={m.id}>{m.full_name}</option>
+            ))}
+          </select>
+        )}
+      </div>
 
       {loading ? (
         <p className="mt-6 text-mist">Carregando...</p>
-      ) : products.length === 0 ? (
-        <p className="mt-6 text-mist">Você ainda não postou nenhuma conta.</p>
+      ) : filtrados.length === 0 ? (
+        <p className="mt-6 text-mist">
+          {products.length === 0 ? 'Você ainda não postou nenhuma conta.' : 'Nenhuma conta encontrada com esses filtros.'}
+        </p>
       ) : (
-        <div className="mt-6 overflow-hidden rounded-lg border border-line">
-          <table className="w-full text-left text-sm">
+        <div className="mt-6 overflow-x-auto rounded-lg border border-line">
+          <table className="w-full min-w-[640px] text-left text-sm">
             <thead className="bg-panel2 text-mist">
               <tr>
                 <th className="px-4 py-3"></th>
@@ -141,7 +159,7 @@ export default function ProductList() {
               </tr>
             </thead>
             <tbody>
-              {products.map((p) => {
+              {filtrados.map((p) => {
                 const capa = p.media?.[0]
                 return (
                   <tr key={p.id} className="border-t border-line">
@@ -163,11 +181,6 @@ export default function ProductList() {
                     {isAdmin && <td className="px-4 py-3 text-mist">{p.profiles?.full_name}</td>}
                     <td className="px-4 py-3 text-right">
                       <Link to={`/admin/produtos/${p.id}`} className="mr-3 text-gold hover:underline">Editar</Link>
-                      {isAdmin && (
-                        <button onClick={() => simularCompra(p)} className="mr-3 text-emerald hover:underline">
-                          🧪 Simular compra
-                        </button>
-                      )}
                       <button onClick={() => handleDelete(p)} className="text-ember hover:underline">Excluir</button>
                     </td>
                   </tr>
