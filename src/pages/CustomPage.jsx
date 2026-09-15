@@ -89,7 +89,7 @@ export default function CustomPage() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    html, body { margin: 0 !important; padding: 0 !important; max-width: 100vw; overflow-x: hidden; height: auto !important; min-height: 0 !important; }
+    html, body { margin: 0; padding: 0; max-width: 100vw; overflow-x: hidden; }
     img { max-width: 100%; height: auto; }
     table { max-width: 100%; }
     * { box-sizing: border-box; }
