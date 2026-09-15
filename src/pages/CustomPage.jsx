@@ -36,7 +36,7 @@ export default function CustomPage() {
     setGaleriaPaginas(null)
     supabase
       .from('site_pages')
-      .select('menu_label, content_html, gallery_category_id')
+      .select('menu_label, content_html, gallery_category_id, seo_title, seo_description')
       .eq('slug', slug)
       .single()
       .then(async ({ data, error }) => {
@@ -55,6 +55,36 @@ export default function CustomPage() {
         }
       })
   }, [slug])
+
+  // Aplica o título e a descrição de SEO configurados no painel admin,
+  // e devolve os valores originais do site quando a pessoa sai da página.
+  useEffect(() => {
+    if (!pagina) return
+
+    const tituloAnterior = document.title
+    document.title = pagina.seo_title || pagina.menu_label
+
+    let metaDesc = document.querySelector('meta[name="description"]')
+    const criouMeta = !metaDesc
+    if (!metaDesc) {
+      metaDesc = document.createElement('meta')
+      metaDesc.setAttribute('name', 'description')
+      document.head.appendChild(metaDesc)
+    }
+    const descAnterior = metaDesc.getAttribute('content')
+    if (pagina.seo_description) {
+      metaDesc.setAttribute('content', pagina.seo_description)
+    }
+
+    return () => {
+      document.title = tituloAnterior
+      if (criouMeta) {
+        metaDesc.remove()
+      } else if (descAnterior !== null) {
+        metaDesc.setAttribute('content', descAnterior)
+      }
+    }
+  }, [pagina])
 
   function ajustarAltura() {
     try {

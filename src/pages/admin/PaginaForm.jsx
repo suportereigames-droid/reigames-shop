@@ -9,7 +9,7 @@ export default function PaginaForm() {
 
   const [categoriasPagina, setCategoriasPagina] = useState([])
   const [novaCategoria, setNovaCategoria] = useState('')
-  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null, image_url: null, gallery_category_id: null })
+  const [form, setForm] = useState({ slug: '', menu_label: '', content_html: '', show_in_menu: true, sort_order: 0, page_category_id: null, image_url: null, gallery_category_id: null, seo_title: '', seo_description: '' })
   const [loading, setLoading] = useState(isEditing)
   const [saving, setSaving] = useState(false)
   const [enviandoImagem, setEnviandoImagem] = useState(false)
@@ -118,6 +118,30 @@ export default function PaginaForm() {
         </div>
 
         <div>
+          <label className="mb-1 block text-sm text-mist">
+            Título para o Google <span className="text-xs">(opcional — aparece na aba do navegador e na busca)</span>
+          </label>
+          <input
+            className="input"
+            value={form.seo_title || ''}
+            onChange={(e) => setForm({ ...form, seo_title: e.target.value })}
+            placeholder="Ex: Grupo WhatsApp compra e venda de contas EFOOTBALL"
+          />
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm text-mist">
+            Descrição para o Google <span className="text-xs">(opcional — aparece embaixo do título na busca)</span>
+          </label>
+          <textarea
+            className="input min-h-20 text-sm"
+            value={form.seo_description || ''}
+            onChange={(e) => setForm({ ...form, seo_description: e.target.value })}
+            placeholder="Ex: Compre e venda contas de EFOOTBALL com segurança! Encontre ofertas exclusivas e negocie com outros jogadores."
+          />
+        </div>
+
+        <div>
           <label className="mb-1 block text-sm text-mist">Agrupar dentro de uma categoria (opcional)</label>
           <select
             className="input"
@@ -150,7 +174,6 @@ export default function PaginaForm() {
                     type="file"
                     accept="image/*"
                     onChange={(e) => {
-                      alert('Evento disparado! Arquivo: ' + (e.target.files[0]?.name || 'NENHUM ARQUIVO'))
                       enviarImagem(e.target.files[0])
                     }}
                     className="sr-only"
@@ -173,7 +196,6 @@ export default function PaginaForm() {
                 type="file"
                 accept="image/*"
                 onChange={(e) => {
-                  alert('Evento disparado! Arquivo: ' + (e.target.files[0]?.name || 'NENHUM ARQUIVO'))
                   enviarImagem(e.target.files[0])
                 }}
                 className="sr-only"
