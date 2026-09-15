@@ -152,6 +152,7 @@ export default function ProductDetail() {
   const [mostrarZoom, setMostrarZoom] = useState(false)
   const [whatsappDono, setWhatsappDono] = useState(null)
   const [taxas, setTaxas] = useState({ 1: 0 })
+  const gestoFoto = useRef({ startX: 0, startY: 0, moved: false })
 
   useEffect(() => {
     async function load() {
@@ -208,7 +209,32 @@ export default function ProductDetail() {
     <div className="mx-auto max-w-4xl px-4 py-10">
       <div
         className="relative aspect-square w-full cursor-zoom-in overflow-hidden rounded-lg bg-panel2"
-        onClick={() => atual && setMostrarZoom(true)}
+        onClick={() => {
+          if (gestoFoto.current.moved) {
+            gestoFoto.current.moved = false
+            return
+          }
+          atual && setMostrarZoom(true)
+        }}
+        onTouchStart={(e) => {
+          gestoFoto.current = { startX: e.touches[0].clientX, startY: e.touches[0].clientY, moved: false }
+        }}
+        onTouchMove={(e) => {
+          const dx = e.touches[0].clientX - gestoFoto.current.startX
+          const dy = e.touches[0].clientY - gestoFoto.current.startY
+          if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+            gestoFoto.current.moved = true
+          }
+        }}
+        onTouchEnd={(e) => {
+          const dx = e.changedTouches[0].clientX - gestoFoto.current.startX
+          const dy = e.changedTouches[0].clientY - gestoFoto.current.startY
+          if (Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+            gestoFoto.current.moved = true
+            if (dx < 0 && ativo < midia.length - 1) setAtivo((i) => i + 1)
+            else if (dx > 0 && ativo > 0) setAtivo((i) => i - 1)
+          }
+        }}
       >
         {temDesconto && (
           <span className="absolute left-3 top-3 z-10 rounded bg-emerald px-2 py-1 text-xs font-bold text-white">
