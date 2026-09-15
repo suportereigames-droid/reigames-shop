@@ -49,10 +49,43 @@ export default function CustomPage() {
         if (!link.target) link.setAttribute('target', '_blank')
         link.setAttribute('rel', 'noopener noreferrer')
       })
+
+      // Se uma tabela específica ainda precisar de mais espaço que a
+      // tela (texto/links longos que não quebram linha), só ela ganha
+      // rolagem própria — a página em volta continua fixa.
+      doc?.querySelectorAll('table').forEach((tabela) => {
+        if (tabela.parentElement?.dataset?.tabelaEnvolvida) return
+        const envoltorio = doc.createElement('div')
+        envoltorio.style.overflowX = 'auto'
+        envoltorio.dataset.tabelaEnvolvida = 'true'
+        tabela.parentNode.insertBefore(envoltorio, tabela)
+        envoltorio.appendChild(tabela)
+      })
     } catch {
       // se por algum motivo não der pra medir/ajustar, mantém como está
     }
   }
+
+  // O texto colado no painel é só um pedaço de HTML (sem <html>/<head>),
+  // então aqui a gente monta o documento completo em volta dele, já com
+  // regras básicas pra imagem/tabela nunca ficarem mais largas que a
+  // tela (senão a página inteira vira "arrastável" pros lados).
+  const documentoCompleto = pagina && `<!doctype html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    html, body { margin: 0; padding: 0; max-width: 100vw; overflow-x: hidden; }
+    img { max-width: 100%; height: auto; }
+    table { max-width: 100%; }
+    * { box-sizing: border-box; }
+  </style>
+</head>
+<body>
+${pagina.content_html}
+</body>
+</html>`
 
   if (naoEncontrado) return <p className="mx-auto max-w-4xl px-4 py-10 text-mist">Essa página não existe.</p>
   if (!pagina) return <p className="mx-auto max-w-4xl px-4 py-10 text-mist">Carregando...</p>
@@ -99,7 +132,7 @@ export default function CustomPage() {
       <iframe
         ref={iframeRef}
         title={pagina.menu_label}
-        srcDoc={pagina.content_html}
+        srcDoc={documentoCompleto}
         onLoad={ajustarAltura}
         sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation"
         style={{ width: '100%', height: altura, border: 'none', borderRadius: '8px', background: '#fff' }}
