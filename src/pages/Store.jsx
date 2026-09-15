@@ -159,13 +159,23 @@ export default function Store() {
   const [game, setGame] = useState('todos')
   const [subcategoria, setSubcategoria] = useState('todas')
 
+  const categoriaAtual = useMemo(() => categorias.find((c) => c.name === game), [categorias, game])
+  const subcategoriaAtual = useMemo(
+    () => subcategoriasBanco.find((s) => s.name === subcategoria),
+    [subcategoriasBanco, subcategoria]
+  )
+
   useSEO(
-    game !== 'todos'
-      ? `Contas de ${game} — REI GAMES`
-      : 'REI GAMES — Contas verificadas de EFOOTBALL, Clash of Clans, Clash Royale e mais',
-    game !== 'todos'
-      ? `Compre contas de ${game} com garantia e entrega segura. Parcelamento no cartão e mediação segura.`
-      : 'Compre e venda contas de jogos com garantia e entrega segura. Parcelamento no cartão e mediação segura.'
+    subcategoriaAtual?.seo_title
+      || categoriaAtual?.seo_title
+      || (game !== 'todos'
+        ? `Contas de ${game} — REI GAMES`
+        : 'REI GAMES — Contas verificadas de EFOOTBALL, Clash of Clans, Clash Royale e mais'),
+    subcategoriaAtual?.seo_description
+      || categoriaAtual?.seo_description
+      || (game !== 'todos'
+        ? `Compre contas de ${game} com garantia e entrega segura. Parcelamento no cartão e mediação segura.`
+        : 'Compre e venda contas de jogos com garantia e entrega segura. Parcelamento no cartão e mediação segura.')
   )
 
   useEffect(() => {

@@ -96,13 +96,36 @@ export default function CategoriasList() {
     load()
   }
 
+  // Atualiza o campo na tela na hora (sem esperar o banco), e salva de
+  // verdade quando a pessoa sai do campo (onBlur) — assim não manda uma
+  // requisição a cada letra digitada.
+  function editarCampoCategoria(categoriaId, campo, valor) {
+    setCategorias((atuais) => atuais.map((c) => (c.id === categoriaId ? { ...c, [campo]: valor } : c)))
+  }
+
+  async function salvarCampoCategoria(categoriaId, campo, valor) {
+    await supabase.from('categories').update({ [campo]: valor }).eq('id', categoriaId)
+  }
+
+  function editarCampoSubcategoria(categoriaId, subId, campo, valor) {
+    setSubcategoriasPorCategoria((atuais) => ({
+      ...atuais,
+      [categoriaId]: (atuais[categoriaId] || []).map((s) => (s.id === subId ? { ...s, [campo]: valor } : s)),
+    }))
+  }
+
+  async function salvarCampoSubcategoria(subId, campo, valor) {
+    await supabase.from('subcategories').update({ [campo]: valor }).eq('id', subId)
+  }
+
   return (
     <div className="max-w-2xl">
       <h1 className="text-2xl font-bold text-ink">Categorias e subcategorias</h1>
       <p className="mt-1 text-sm text-mist">
         Usadas no cadastro de contas e nos filtros do site. Cada uma pode ter uma imagem (o ícone
-        redondo que aparece na home). Use as setinhas ▲▼ pra mudar a ordem — é a mesma ordem que
-        aparece na home do site.
+        redondo que aparece na home) e um título/descrição pro Google — abra uma categoria pra ver
+        essas opções. Use as setinhas ▲▼ pra mudar a ordem — é a mesma ordem que aparece na home
+        do site.
       </p>
 
       <div className="mt-6 flex gap-2">
@@ -166,27 +189,69 @@ export default function CategoriasList() {
 
             {categoriaAberta === cat.id && (
               <div className="border-t border-line p-3">
+                <div className="mb-4 space-y-3 rounded bg-panel2 p-3">
+                  <p className="text-xs font-semibold uppercase text-mist">SEO da categoria (opcional)</p>
+                  <div>
+                    <label className="mb-1 block text-xs text-mist">Título para o Google</label>
+                    <input
+                      className="input text-sm"
+                      value={cat.seo_title || ''}
+                      onChange={(e) => editarCampoCategoria(cat.id, 'seo_title', e.target.value)}
+                      onBlur={(e) => salvarCampoCategoria(cat.id, 'seo_title', e.target.value)}
+                      placeholder={`Ex: Contas de ${cat.name} — REI GAMES`}
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs text-mist">Descrição para o Google</label>
+                    <textarea
+                      className="input min-h-16 text-sm"
+                      value={cat.seo_description || ''}
+                      onChange={(e) => editarCampoCategoria(cat.id, 'seo_description', e.target.value)}
+                      onBlur={(e) => salvarCampoCategoria(cat.id, 'seo_description', e.target.value)}
+                      placeholder={`Ex: Compre contas de ${cat.name} com garantia e entrega segura.`}
+                    />
+                  </div>
+                </div>
+
                 {(subcategoriasPorCategoria[cat.id] || []).map((sub) => (
-                  <div key={sub.id} className="flex items-center justify-between border-b border-line py-2 last:border-0">
-                    <div className="flex items-center gap-3">
-                      {sub.image_url ? (
-                        <img src={sub.image_url} alt="" className="h-8 w-8 rounded-full object-cover" />
-                      ) : (
-                        <div className="h-8 w-8 rounded-full bg-panel2" />
-                      )}
-                      <span className="text-ink">{sub.name}</span>
+                  <div key={sub.id} className="border-b border-line py-3 last:border-0">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        {sub.image_url ? (
+                          <img src={sub.image_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                        ) : (
+                          <div className="h-8 w-8 rounded-full bg-panel2" />
+                        )}
+                        <span className="text-ink">{sub.name}</span>
+                      </div>
+                      <div className="flex items-center gap-3 text-sm">
+                        <label className="btn-ghost cursor-pointer text-xs">
+                          Trocar foto
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="sr-only"
+                            onChange={(e) => enviarImagemSubcategoria(sub, e.target.files[0])}
+                          />
+                        </label>
+                        <button onClick={() => excluirSubcategoria(sub.id)} className="text-ember">Remover</button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-3 text-sm">
-                      <label className="btn-ghost cursor-pointer text-xs">
-                        Trocar foto
-                        <input
-                          type="file"
-                          accept="image/*"
-                          className="sr-only"
-                          onChange={(e) => enviarImagemSubcategoria(sub, e.target.files[0])}
-                        />
-                      </label>
-                      <button onClick={() => excluirSubcategoria(sub.id)} className="text-ember">Remover</button>
+                    <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                      <input
+                        className="input text-xs"
+                        value={sub.seo_title || ''}
+                        onChange={(e) => editarCampoSubcategoria(cat.id, sub.id, 'seo_title', e.target.value)}
+                        onBlur={(e) => salvarCampoSubcategoria(sub.id, 'seo_title', e.target.value)}
+                        placeholder="Título para o Google (opcional)"
+                      />
+                      <input
+                        className="input text-xs"
+                        value={sub.seo_description || ''}
+                        onChange={(e) => editarCampoSubcategoria(cat.id, sub.id, 'seo_description', e.target.value)}
+                        onBlur={(e) => salvarCampoSubcategoria(sub.id, 'seo_description', e.target.value)}
+                        placeholder="Descrição para o Google (opcional)"
+                      />
                     </div>
                   </div>
                 ))}
