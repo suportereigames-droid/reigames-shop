@@ -40,8 +40,17 @@ export default function CustomPage() {
     try {
       const doc = iframeRef.current?.contentWindow?.document
       if (doc?.body) setAltura(doc.body.scrollHeight + 40)
+
+      // Os links colados aqui não têm "abrir em nova aba" — sem isso, o
+      // clique tenta navegar DENTRO dessa janela isolada, e sites como o
+      // WhatsApp recusam aparecer aí dentro (fica em branco, "recusado").
+      // Forçamos todo link a abrir numa aba de verdade.
+      doc?.querySelectorAll('a[href]').forEach((link) => {
+        if (!link.target) link.setAttribute('target', '_blank')
+        link.setAttribute('rel', 'noopener noreferrer')
+      })
     } catch {
-      // se por algum motivo não der pra medir, mantém a altura padrão
+      // se por algum motivo não der pra medir/ajustar, mantém como está
     }
   }
 
