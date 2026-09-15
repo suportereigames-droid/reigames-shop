@@ -153,6 +153,16 @@ export default function ProductDetail() {
   const [whatsappDono, setWhatsappDono] = useState(null)
   const [taxas, setTaxas] = useState({ 1: 0 })
   const gestoFoto = useRef({ startX: 0, startY: 0, moved: false })
+  const miniaturasRef = useRef(null)
+
+  // Sempre que a foto ativa mudar (arrastando na foto grande ou clicando
+  // numa miniatura), rola a fileira de miniaturas até deixar a atual visível.
+  useEffect(() => {
+    const container = miniaturasRef.current
+    if (!container) return
+    const ativoEl = container.querySelector(`[data-thumb-index="${ativo}"]`)
+    if (ativoEl) ativoEl.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' })
+  }, [ativo])
 
   useEffect(() => {
     async function load() {
@@ -258,10 +268,11 @@ export default function ProductDetail() {
       </div>
 
       {midia.length > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto">
+        <div ref={miniaturasRef} className="mt-3 flex gap-2 overflow-x-auto">
           {midia.map((m, i) => (
             <button
               key={i}
+              data-thumb-index={i}
               onClick={() => setAtivo(i)}
               className={`h-16 w-24 flex-shrink-0 overflow-hidden rounded border ${i === ativo ? 'border-gold' : 'border-line'}`}
             >
