@@ -1,8 +1,13 @@
 // Servidor Node que roda o site na Hostinger.
 //
-// Faz três coisas:
+// Faz quatro coisas:
+// 0. Confere se a pasta dist/ (gerada pelo "npm run build") existe; se não
+//    existir, builda o site sozinho antes de continuar. Isso é necessário
+//    porque a Hostinger, com o preset "Express", roda "node server.js"
+//    direto — sem passar pelo "npm start" — então nenhum script do
+//    package.json (nem o "prestart") chega a rodar sozinho.
 // 1. Serve o site normalmente pra qualquer pessoa (os arquivos gerados
-//    pelo "npm run build", na pasta dist/).
+//    pelo build, na pasta dist/).
 // 2. Quando detecta que quem está "visitando" é o robô de prévia de link
 //    (WhatsApp, Facebook, Telegram, etc. — eles não executam JavaScript,
 //    só leem o HTML da primeira resposta), devolve um HTML pequeno com o
@@ -17,10 +22,19 @@
 import express from 'express'
 import path from 'path'
 import { fileURLToPath } from 'url'
+import { existsSync } from 'fs'
+import { execSync } from 'child_process'
 import { createClient } from '@supabase/supabase-js'
 import sharp from 'sharp'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+const distIndexPath = path.join(__dirname, 'dist', 'index.html')
+if (!existsSync(distIndexPath)) {
+  console.log('dist/index.html não encontrado — rodando "npm run build" antes de iniciar o servidor...')
+  execSync('npm run build', { cwd: __dirname, stdio: 'inherit' })
+}
+
 const app = express()
 const PORT = process.env.PORT || 3000
 
@@ -44,8 +58,6 @@ function escaparHtml(texto) {
   })[c])
 }
 
-// Transforma a URL original da imagem (Supabase) numa URL do nosso próprio
-// domínio, que passa pela rota /og-image antes de chegar ao robô de prévia.
 function urlDeImagemParaPrevia(req, urlOriginal) {
   if (!urlOriginal || !urlOriginal.startsWith('http')) return urlOriginal
   const base = `${req.protocol}://${req.get('host')}`
@@ -72,8 +84,6 @@ function paginaOg({ titulo, descricao, imagem, url }) {
 </html>`
 }
 
-// Proxy de imagem: busca a imagem original, reduz pra um tamanho leve e
-// devolve como JPEG, sem o cabeçalho que bloqueia o uso em prévias.
 app.get('/og-image', async (req, res) => {
   const origem = req.query.url
   if (!origem || !origem.startsWith(SUPABASE_URL)) {
@@ -95,7 +105,6 @@ app.get('/og-image', async (req, res) => {
   }
 })
 
-// Prévia para páginas de produto (mesma lógica que já existia no Netlify)
 app.get('/produto/:id', async (req, res, next) => {
   if (!ehRobo(req)) return next()
   try {
@@ -120,7 +129,6 @@ app.get('/produto/:id', async (req, res, next) => {
   }
 })
 
-// Prévia para páginas customizadas (grupos de WhatsApp, etc.)
 app.get('/pagina/:slug', async (req, res, next) => {
   if (!ehRobo(req)) return next()
   try {
@@ -143,12 +151,8 @@ app.get('/pagina/:slug', async (req, res, next) => {
   }
 })
 
-// Serve os arquivos estáticos gerados pelo "npm run build"
 app.use(express.static(path.join(__dirname, 'dist')))
 
-// Qualquer outra rota cai no index.html (o React Router decide o resto).
-// Usamos app.use (sem caminho) em vez de app.get('*', ...) porque, no
-// Express 5, a rota coringa "*" sozinha não é mais aceita.
 app.use((req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'))
 })
