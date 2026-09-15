@@ -2,22 +2,16 @@
 //
 // Faz quatro coisas:
 // 0. Confere se a pasta dist/ (gerada pelo "npm run build") existe; se não
-//    existir, builda o site sozinho antes de continuar. Isso é necessário
-//    porque a Hostinger, com o preset "Express", roda "node server.js"
-//    direto — sem passar pelo "npm start" — então nenhum script do
-//    package.json (nem o "prestart") chega a rodar sozinho.
+//    existir, builda o site sozinho antes de continuar.
 // 1. Serve o site normalmente pra qualquer pessoa (os arquivos gerados
 //    pelo build, na pasta dist/).
 // 2. Quando detecta que quem está "visitando" é o robô de prévia de link
-//    (WhatsApp, Facebook, Telegram, etc. — eles não executam JavaScript,
-//    só leem o HTML da primeira resposta), devolve um HTML pequeno com o
-//    título/imagem/descrição certos daquele produto ou página específica,
-//    em vez da prévia genérica do site inteiro.
+//    (WhatsApp, Facebook, Telegram, etc.), devolve um HTML pequeno com o
+//    título/imagem/descrição certos daquele produto, categoria/subcategoria
+//    ou página específica, em vez da prévia genérica do site inteiro.
 // 3. Serve como "proxy" das imagens usadas nessas prévias: busca a imagem
 //    original no Supabase, reduz o tamanho dela e devolve sem o cabeçalho
-//    "x-robots-tag" que o Supabase Storage manda por padrão — cabeçalho
-//    que faz o WhatsApp/Facebook ignorarem a imagem na prévia, mesmo ela
-//    sendo pública e carregando normal no navegador.
+//    "x-robots-tag" que o Supabase Storage manda por padrão.
 
 import express from 'express'
 import path from 'path'
@@ -50,6 +44,17 @@ const ROBOS_DE_PREVIA = [
 function ehRobo(req) {
   const ua = (req.headers['user-agent'] || '').toLowerCase()
   return ROBOS_DE_PREVIA.some((r) => ua.includes(r))
+}
+
+// Mesma função usada no site (src/pages/Store.jsx) pra transformar nome de
+// categoria/subcategoria no "slug" que aparece na URL — precisa ser
+// idêntica, senão o servidor não acha a categoria certa a partir do link.
+function slugify(texto) {
+  return texto
+    .toLowerCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '')
 }
 
 function escaparHtml(texto) {
@@ -150,6 +155,46 @@ app.get('/pagina/:slug', async (req, res, next) => {
     return next()
   }
 })
+
+// Prévia para categoria e subcategoria (mesmo handler pras duas rotas —
+// a subcategoria só existe quando o link tem esse segundo pedaço na URL).
+async function handlerCategoria(req, res, next) {
+  if (!ehRobo(req)) return next()
+  try {
+    const { data: categorias } = await supabase
+      .from('categories')
+      .select('name, image_url, seo_title, seo_description')
+    const categoria = (categorias || []).find((c) => slugify(c.name) === req.params.slugCategoria)
+    if (!categoria) return next()
+
+    let subcategoria = null
+    if (req.params.slugSubcategoria) {
+      const { data: subs } = await supabase
+        .from('subcategories')
+        .select('name, image_url, seo_title, seo_description')
+      subcategoria = (subs || []).find((s) => slugify(s.name) === req.params.slugSubcategoria)
+    }
+
+    const nomeExibido = subcategoria?.name || categoria.name
+    const titulo = escaparHtml(
+      subcategoria?.seo_title || categoria.seo_title || `Contas de ${nomeExibido} — REI GAMES`
+    )
+    const descricao = escaparHtml(
+      subcategoria?.seo_description || categoria.seo_description ||
+      `Compre contas de ${nomeExibido} com garantia, entrega rápida e pagamento facilitado.`
+    )
+    const imagemOriginal = subcategoria?.image_url || categoria.image_url || `${req.protocol}://${req.get('host')}/logo-preview.png`
+    const imagem = urlDeImagemParaPrevia(req, imagemOriginal)
+    const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
+    res.set('content-type', 'text/html; charset=utf-8')
+    return res.send(paginaOg({ titulo, descricao, imagem, url }))
+  } catch {
+    return next()
+  }
+}
+
+app.get('/categoria/:slugCategoria', handlerCategoria)
+app.get('/categoria/:slugCategoria/:slugSubcategoria', handlerCategoria)
 
 app.use(express.static(path.join(__dirname, 'dist')))
 
