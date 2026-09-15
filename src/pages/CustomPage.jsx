@@ -2,6 +2,26 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 
+// Ajusta o HTML colado no painel ANTES de colocar no iframe, forçando todo
+// link a abrir em nova aba desde o primeiro instante. Antes, isso só era
+// feito depois que o iframe terminava de carregar (onLoad), e clicar num
+// link antes disso acontecer navegava a aba inteira do site (em vez de abrir
+// nova aba), o que causava telas em branco/travadas quando o destino (ex:
+// WhatsApp) demorava ou falhava ao redirecionar.
+function prepararHtml(html) {
+  try {
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(html, 'text/html')
+    doc.querySelectorAll('a[href]').forEach((link) => {
+      if (!link.target) link.setAttribute('target', '_blank')
+      link.setAttribute('rel', 'noopener noreferrer')
+    })
+    return doc.documentElement.outerHTML
+  } catch {
+    return html
+  }
+}
+
 export default function CustomPage() {
   const { slug } = useParams()
   const [pagina, setPagina] = useState(null)
@@ -24,7 +44,7 @@ export default function CustomPage() {
           setNaoEncontrado(true)
           return
         }
-        setPagina(data)
+        setPagina({ ...data, content_html: prepararHtml(data.content_html) })
         if (data.gallery_category_id) {
           const { data: pgs } = await supabase
             .from('site_pages')
@@ -40,17 +60,8 @@ export default function CustomPage() {
     try {
       const doc = iframeRef.current?.contentWindow?.document
       if (doc?.body) setAltura(doc.body.scrollHeight + 40)
-
-      // Os links colados aqui não têm "abrir em nova aba" — sem isso, o
-      // clique tenta navegar DENTRO dessa janela isolada, e sites como o
-      // WhatsApp recusam aparecer aí dentro (fica em branco, "recusado").
-      // Forçamos todo link a abrir numa aba de verdade.
-      doc?.querySelectorAll('a[href]').forEach((link) => {
-        if (!link.target) link.setAttribute('target', '_blank')
-        link.setAttribute('rel', 'noopener noreferrer')
-      })
     } catch {
-      // se por algum motivo não der pra medir/ajustar, mantém como está
+      // se por algum motivo não der pra medir, mantém como está
     }
   }
 
