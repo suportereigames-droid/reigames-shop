@@ -5,10 +5,11 @@ import { supabase } from '../lib/supabaseClient'
 // Ajusta o HTML colado no painel ANTES de colocar no iframe:
 // 1) força todo link a abrir em nova aba desde o primeiro instante (evita
 //    navegar a aba inteira do site antes do onLoad rodar);
-// 2) força o documento interno do iframe a nunca ter rolagem própria
-//    (overflow: hidden no html/body dele) — isso evita que o iframe "roube"
-//    o toque no celular quando a rolagem chega no topo/fim da página, o que
-//    causava a sensação de travar e precisar soltar o dedo e tentar de novo.
+// 2) desativa a seleção de texto por toque longo (long-press) dentro do
+//    conteúdo — é isso que causava o travamento ao rolar: segurar o dedo
+//    um instante antes de arrastar fazia o celular entrar em "modo de
+//    selecionar texto" em vez de rolar a página, e só voltava a rolar
+//    num gesto novo, direto, sem pausa.
 function prepararHtml(html) {
   try {
     const parser = new DOMParser()
@@ -18,7 +19,16 @@ function prepararHtml(html) {
       link.setAttribute('rel', 'noopener noreferrer')
     })
     const style = doc.createElement('style')
-    style.textContent = 'html, body { overflow: hidden !important; }'
+    style.textContent = `
+      html, body {
+        overflow: hidden !important;
+      }
+      * {
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+    `
     doc.head.appendChild(style)
     return doc.documentElement.outerHTML
   } catch {
@@ -141,9 +151,10 @@ export default function CustomPage() {
       {/* Renderiza o código colado no painel dentro de uma "janela" isolada,
           com as cores e o fundo originais dele — assim ele não briga com o
           tema escuro do resto do site (o problema de texto/imagem sumindo).
-          scrolling="no" + overflow:hidden injetado no head garantem que o
-          iframe nunca tenha rolagem própria, evitando o travamento ao
-          rolar perto do topo/fim no celular. */}
+          touchAction: 'pan-y' avisa o navegador, antecipadamente, que esse
+          iframe só deve permitir rolagem vertical — evitando que ele "segure"
+          o primeiro toque perguntando se quer rolar por dentro (limitação
+          conhecida do WebKit/Android ao rolar sobre iframes). */}
       <iframe
         ref={iframeRef}
         title={pagina.menu_label}
@@ -151,7 +162,15 @@ export default function CustomPage() {
         onLoad={ajustarAltura}
         scrolling="no"
         sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation"
-        style={{ width: '100%', height: altura, border: 'none', borderRadius: '8px', background: '#fff' }}
+        style={{
+          width: '100%',
+          height: altura,
+          border: 'none',
+          borderRadius: '8px',
+          background: '#fff',
+          touchAction: 'pan-y',
+          pointerEvents: 'auto',
+        }}
       />
     </div>
   )
