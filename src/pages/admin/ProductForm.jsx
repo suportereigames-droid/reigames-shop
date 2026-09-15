@@ -103,11 +103,17 @@ export default function ProductForm() {
     })
   }
 
+  // Só a CAPA (primeira imagem da conta) é cortada em quadrado — as fotos
+  // seguintes mantêm a proporção original, sem cortar as laterais.
   async function adicionarArquivos(fileList) {
-    for (const file of Array.from(fileList)) {
+    const jaTinhaItens = itens.length > 0
+    const arquivos = Array.from(fileList)
+    for (let i = 0; i < arquivos.length; i++) {
+      const file = arquivos[i]
       const ehVideo = file.type.startsWith('video')
+      const ehCapa = !ehVideo && !jaTinhaItens && i === 0
       let arquivoFinal = file
-      if (!ehVideo) {
+      if (ehCapa) {
         try {
           arquivoFinal = await recortarQuadrado(file)
         } catch {
