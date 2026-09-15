@@ -65,7 +65,7 @@ function escaparHtml(texto) {
 
 function urlDeImagemParaPrevia(req, urlOriginal) {
   if (!urlOriginal || !urlOriginal.startsWith('http')) return urlOriginal
-  const base = `${req.protocol}://${req.get('host')}`
+  const base = `https://${req.get('host')}`
   return `${base}/og-image?url=${encodeURIComponent(urlOriginal)}`
 }
 
@@ -120,13 +120,13 @@ app.get('/produto/:id', async (req, res, next) => {
       .single()
     if (!produto) return next()
 
-    const imagemOriginal = produto.media?.[0]?.url || `${req.protocol}://${req.get('host')}/logo-preview.png`
+    const imagemOriginal = produto.media?.[0]?.url || `https://${req.get('host')}/logo-preview.png`
     const imagem = urlDeImagemParaPrevia(req, imagemOriginal)
     const titulo = escaparHtml(produto.title || 'Conta verificada — REI GAMES')
     const descricao = escaparHtml(
       `R$ ${Number(produto.price).toFixed(2).replace('.', ',')} — Conta verificada, entrega com garantia.`
     )
-    const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
+    const url = `https://${req.get('host')}${req.originalUrl}`
     res.set('content-type', 'text/html; charset=utf-8')
     return res.send(paginaOg({ titulo, descricao, imagem, url }))
   } catch {
@@ -144,11 +144,11 @@ app.get('/pagina/:slug', async (req, res, next) => {
       .single()
     if (!pagina) return next()
 
-    const imagemOriginal = pagina.image_url || `${req.protocol}://${req.get('host')}/logo-preview.png`
+    const imagemOriginal = pagina.image_url || `https://${req.get('host')}/logo-preview.png`
     const imagem = urlDeImagemParaPrevia(req, imagemOriginal)
     const titulo = escaparHtml(pagina.seo_title || pagina.menu_label)
     const descricao = escaparHtml(pagina.seo_description || 'Compre e venda contas de jogos com segurança — REI GAMES.')
-    const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
+    const url = `https://${req.get('host')}${req.originalUrl}`
     res.set('content-type', 'text/html; charset=utf-8')
     return res.send(paginaOg({ titulo, descricao, imagem, url }))
   } catch {
@@ -183,9 +183,9 @@ async function handlerCategoria(req, res, next) {
       subcategoria?.seo_description || categoria.seo_description ||
       `Compre contas de ${nomeExibido} com garantia, entrega rápida e pagamento facilitado.`
     )
-    const imagemOriginal = subcategoria?.image_url || categoria.image_url || `${req.protocol}://${req.get('host')}/logo-preview.png`
+    const imagemOriginal = subcategoria?.image_url || categoria.image_url || `https://${req.get('host')}/logo-preview.png`
     const imagem = urlDeImagemParaPrevia(req, imagemOriginal)
-    const url = `${req.protocol}://${req.get('host')}${req.originalUrl}`
+    const url = `https://${req.get('host')}${req.originalUrl}`
     res.set('content-type', 'text/html; charset=utf-8')
     return res.send(paginaOg({ titulo, descricao, imagem, url }))
   } catch {
