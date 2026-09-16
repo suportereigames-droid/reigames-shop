@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useSEO } from '../lib/useSEO.js'
 import { slugify } from '../lib/slugify.js'
+import { imagemOtimizada } from '../lib/imagemOtimizada.js'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -267,7 +268,7 @@ export default function ProductDetail() {
             <video src={atual.url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture className="h-full w-full object-contain" onClick={(e) => e.stopPropagation()} />
           ) : (
             <img
-              src={atual.url}
+              src={imagemOtimizada(atual.url, { width: 1000 })}
               alt={product.title}
               className="h-full w-full object-contain"
               onContextMenu={(e) => e.preventDefault()}
@@ -290,7 +291,7 @@ export default function ProductDetail() {
               {m.type === 'video' ? (
                 <video src={m.url} muted className="h-full w-full object-contain" />
               ) : (
-                <img src={m.url} alt="" className="h-full w-full object-contain" onContextMenu={(e) => e.preventDefault()} draggable={false} />
+                <img src={imagemOtimizada(m.url, { width: 150 })} alt="" className="h-full w-full object-contain" onContextMenu={(e) => e.preventDefault()} draggable={false} />
               )}
             </button>
           ))}
