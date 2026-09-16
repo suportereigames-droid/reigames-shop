@@ -11,9 +11,11 @@ const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currenc
 
 export default function MinhaConta() {
   const [sessao, setSessao] = useState(null)
-  const [linkEnviado, setLinkEnviado] = useState(false)
+  const [codigoEnviado, setCodigoEnviado] = useState(false)
   const [email, setEmail] = useState('')
+  const [codigo, setCodigo] = useState('')
   const [enviando, setEnviando] = useState(false)
+  const [confirmando, setConfirmando] = useState(false)
   const [erro, setErro] = useState('')
   const [pedidos, setPedidos] = useState(null)
 
@@ -32,7 +34,7 @@ export default function MinhaConta() {
       .then(({ data }) => setPedidos(data || []))
   }, [sessao])
 
-  async function enviarLink(e) {
+  async function enviarCodigo(e) {
     e.preventDefault()
     setErro('')
     setEnviando(true)
@@ -40,22 +42,39 @@ export default function MinhaConta() {
       email,
       options: {
         shouldCreateUser: true,
-        data: { is_buyer: true },
-        emailRedirectTo: `${window.location.origin}/minha-conta`
+        data: { is_buyer: true }
       }
     })
     setEnviando(false)
     if (error) {
-      setErro('Não foi possível enviar o link. Confere o e-mail e tenta de novo.')
+      setErro('Não foi possível enviar o código. Confere o e-mail e tenta de novo.')
       return
     }
-    setLinkEnviado(true)
+    setCodigoEnviado(true)
+  }
+
+  async function confirmarCodigo(e) {
+    e.preventDefault()
+    setErro('')
+    setConfirmando(true)
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: codigo,
+      type: 'email'
+    })
+    setConfirmando(false)
+    if (error) {
+      setErro('Código inválido ou expirado. Confere e tenta de novo.')
+      return
+    }
+    // onAuthStateChange já atualiza a sessão automaticamente
   }
 
   async function sair() {
     await supabase.auth.signOut()
-    setLinkEnviado(false)
+    setCodigoEnviado(false)
     setEmail('')
+    setCodigo('')
     setPedidos(null)
   }
 
@@ -96,30 +115,44 @@ export default function MinhaConta() {
       <h1 className="text-2xl font-bold text-ink">Minha conta</h1>
       <p className="mt-1 text-mist">Consulte seus pedidos com o e-mail usado na compra.</p>
 
-      {!linkEnviado ? (
-        <form onSubmit={enviarLink} className="mt-6 space-y-4">
+      {!codigoEnviado ? (
+        <form onSubmit={enviarCodigo} className="mt-6 space-y-4">
           <input
             type="email"
             className="input"
+            placeholder="Seu e-mail"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
           {erro && <p className="text-sm text-ember">{erro}</p>}
           <button type="submit" disabled={enviando} className="btn-primary w-full">
-            {enviando ? 'Enviando...' : 'Receber link por e-mail'}
+            {enviando ? 'Enviando...' : 'Receber código por e-mail'}
           </button>
         </form>
       ) : (
-        <div className="mt-6 space-y-4">
+        <form onSubmit={confirmarCodigo} className="mt-6 space-y-4">
           <p className="text-sm text-mist">
-            Enviamos um link de acesso para <strong>{email}</strong>. Abre o e-mail e clica no link — você
-            volta pra essa página já conectado.
+            Enviamos um código de 6 dígitos para <strong>{email}</strong>. Digita ele aqui embaixo.
           </p>
-          <button type="button" onClick={() => setLinkEnviado(false)} className="w-full text-center text-xs text-mist">
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={6}
+            className="input text-center text-lg tracking-[0.3em]"
+            placeholder="000000"
+            value={codigo}
+            onChange={(e) => setCodigo(e.target.value.replace(/\D/g, ''))}
+            required
+          />
+          {erro && <p className="text-sm text-ember">{erro}</p>}
+          <button type="submit" disabled={confirmando} className="btn-primary w-full">
+            {confirmando ? 'Confirmando...' : 'Confirmar código'}
+          </button>
+          <button type="button" onClick={() => { setCodigoEnviado(false); setCodigo(''); setErro('') }} className="w-full text-center text-xs text-mist">
             Usar outro e-mail
           </button>
-        </div>
+        </form>
       )}
     </div>
   )
