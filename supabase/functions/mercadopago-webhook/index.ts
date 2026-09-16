@@ -52,9 +52,17 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     )
 
+    const camposExtras: Record<string, unknown> = {}
+    if (novoStatus === 'pago') camposExtras.paid_at = new Date().toISOString()
+    if (novoStatus === 'cancelado') camposExtras.cancelled_at = new Date().toISOString()
+
     const { data: order } = await supabase
       .from('orders')
-      .update({ status: novoStatus, mp_payment_id: String(payment.id) })
+      .update({
+        status: novoStatus,
+        mp_payment_id: String(payment.id),
+        ...camposExtras
+      })
       .eq('id', orderId)
       .select()
       .single()

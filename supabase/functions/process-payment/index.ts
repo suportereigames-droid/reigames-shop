@@ -81,7 +81,7 @@ Deno.serve(async (req) => {
 
     const payment = await mpResponse.json()
     if (!mpResponse.ok) {
-      await supabase.from('orders').update({ status: 'cancelado' }).eq('id', order.id)
+      await supabase.from('orders').update({ status: 'cancelado', cancelled_at: new Date().toISOString() }).eq('id', order.id)
       await supabase.from('products').update({ status: 'disponivel' }).eq('id', product.id)
       return json({ error: 'Pagamento recusado pelo Mercado Pago.', detail: payment }, 502)
     }
@@ -94,9 +94,17 @@ Deno.serve(async (req) => {
     }
     const novoStatus = statusMap[payment.status] || 'pendente'
 
+    const camposExtras: Record<string, unknown> = {}
+    if (novoStatus === 'pago') camposExtras.paid_at = new Date().toISOString()
+    if (novoStatus === 'cancelado') camposExtras.cancelled_at = new Date().toISOString()
+
     await supabase
       .from('orders')
-      .update({ status: novoStatus, mp_payment_id: String(payment.id) })
+      .update({
+        status: novoStatus,
+        mp_payment_id: String(payment.id),
+        ...camposExtras
+      })
       .eq('id', order.id)
 
     if (novoStatus === 'pago') {

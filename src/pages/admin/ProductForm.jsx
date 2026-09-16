@@ -105,6 +105,33 @@ export default function ProductForm() {
 
   // Só a CAPA (primeira imagem da conta) é cortada em quadrado — as fotos
   // seguintes mantêm a proporção original, sem cortar as laterais.
+  // Comprime uma foto sem cortar — reduz bastante o tamanho do arquivo
+  // (uma foto direto da câmera pode vir com vários MB) sem mexer na
+  // proporção nem perder qualidade visível. Usado nas fotos além da capa,
+  // que hoje iam pro Storage sem nenhum tratamento.
+  function comprimirMantendoProporcao(file, ladoMaximo = 1600, qualidade = 0.85) {
+    return new Promise((resolve, reject) => {
+      const img = new Image()
+      img.onload = () => {
+        const escala = Math.min(1, ladoMaximo / Math.max(img.width, img.height))
+        const largura = Math.round(img.width * escala)
+        const altura = Math.round(img.height * escala)
+        const canvas = document.createElement('canvas')
+        canvas.width = largura
+        canvas.height = altura
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0, largura, altura)
+        canvas.toBlob((blob) => {
+          URL.revokeObjectURL(img.src)
+          if (blob) resolve(blob)
+          else reject(new Error('Não foi possível comprimir a imagem.'))
+        }, 'image/jpeg', qualidade)
+      }
+      img.onerror = () => reject(new Error('Não foi possível carregar a imagem.'))
+      img.src = URL.createObjectURL(file)
+    })
+  }
+
   async function adicionarArquivos(fileList) {
     const jaTinhaItens = itens.length > 0
     const arquivos = Array.from(fileList)
@@ -118,6 +145,12 @@ export default function ProductForm() {
           arquivoFinal = await recortarQuadrado(file)
         } catch {
           arquivoFinal = file // se der algum problema no recorte, usa a foto original mesmo
+        }
+      } else if (!ehVideo) {
+        try {
+          arquivoFinal = await comprimirMantendoProporcao(file)
+        } catch {
+          arquivoFinal = file // se der algum problema na compressao, usa a foto original mesmo
         }
       }
       const item = {
