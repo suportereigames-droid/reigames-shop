@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabaseClient'
 import { useSEO } from '../lib/useSEO.js'
+import { slugify } from '../lib/slugify.js'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -144,7 +145,7 @@ function ModalZoom({ url, tipo, onFechar }) {
 }
 
 export default function ProductDetail() {
-  const { id } = useParams()
+  const { categoriaSlug, tituloSlug } = useParams()
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [ativo, setAtivo] = useState(0)
@@ -167,12 +168,22 @@ export default function ProductDetail() {
   useEffect(() => {
     async function load() {
       setLoading(true)
-      const { data } = await supabase
+      // Acha a categoria de verdade a partir do slug que veio na URL
+      const { data: categorias } = await supabase.from('categories').select('name')
+      const categoria = (categorias || []).find((c) => slugify(c.name) === categoriaSlug)
+      if (!categoria) {
+        setProduct(null)
+        setLoading(false)
+        return
+      }
+      // Busca só os produtos dessa categoria, e acha o que bate com o
+      // título da URL
+      const { data: produtosDaCategoria } = await supabase
         .from('products')
         .select('id, game, title, description, price, compare_price, media, status')
-        .eq('id', id)
-        .single()
-      setProduct(data)
+        .eq('game', categoria.name)
+      const encontrado = (produtosDaCategoria || []).find((p) => slugify(p.title) === tituloSlug)
+      setProduct(encontrado || null)
       setLoading(false)
     }
     load()
@@ -183,7 +194,7 @@ export default function ProductDetail() {
     supabase.rpc('site_contato_dono').then(({ data }) => {
       if (data?.[0]?.whatsapp) setWhatsappDono(data[0].whatsapp)
     })
-  }, [id])
+  }, [categoriaSlug, tituloSlug])
 
   useSEO(
     product ? `${product.title} — ${money(product.price)} | REI GAMES` : 'Carregando... | REI GAMES',

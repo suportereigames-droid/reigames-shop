@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import { slugify } from '../lib/slugify.js'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -17,7 +18,7 @@ export default function ProductCard({ product, taxas }) {
 
   return (
     <Link
-      to={`/produto/${product.id}`}
+      to={`/categoria/${slugify(product.game)}/produto/${slugify(product.title)}`}
       className="card group relative flex h-full flex-col overflow-hidden transition-colors hover:border-gold/60"
     >
       {temDesconto && (

@@ -110,14 +110,18 @@ app.get('/og-image', async (req, res) => {
   }
 })
 
-app.get('/produto/:id', async (req, res, next) => {
+app.get('/categoria/:categoriaSlug/produto/:tituloSlug', async (req, res, next) => {
   if (!ehRobo(req)) return next()
   try {
-    const { data: produto } = await supabase
+    const { data: categorias } = await supabase.from('categories').select('name')
+    const categoria = (categorias || []).find((c) => slugify(c.name) === req.params.categoriaSlug)
+    if (!categoria) return next()
+
+    const { data: produtos } = await supabase
       .from('products')
       .select('title, description, price, media')
-      .eq('id', req.params.id)
-      .single()
+      .eq('game', categoria.name)
+    const produto = (produtos || []).find((p) => slugify(p.title) === req.params.tituloSlug)
     if (!produto) return next()
 
     const imagemOriginal = produto.media?.[0]?.url || `https://${req.get('host')}/logo-preview.png`
@@ -208,7 +212,7 @@ app.get('/sitemap.xml', async (req, res) => {
       supabase.from('categories').select('id, name'),
       supabase.from('subcategories').select('name, category_id'),
       supabase.from('site_pages').select('slug'),
-      supabase.from('products').select('id').neq('status', 'oculto'),
+      supabase.from('products').select('game, title').neq('status', 'oculto'),
     ])
 
     const categorias = categoriasRes.data || []
@@ -233,7 +237,7 @@ app.get('/sitemap.xml', async (req, res) => {
     }
 
     for (const produto of produtos) {
-      urls.push({ loc: `${base}/produto/${produto.id}` })
+      urls.push({ loc: `${base}/categoria/${slugify(produto.game)}/produto/${slugify(produto.title)}` })
     }
 
     const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
