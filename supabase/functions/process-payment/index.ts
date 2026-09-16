@@ -54,6 +54,12 @@ Deno.serve(async (req) => {
 
     if (orderError) return json({ error: 'Não foi possível criar o pedido.' }, 500)
 
+    // Reserva a conta na hora — assim ninguém mais consegue comprar a
+    // mesma conta enquanto esse pedido está em aberto. Só volta a ficar
+    // disponível se o pagamento for recusado na hora (abaixo) ou se a
+    // equipe cancelar o pedido manualmente depois.
+    await supabase.from('products').update({ status: 'reservado' }).eq('id', product.id)
+
     // Manda os dados do Payment Brick direto pra API de pagamentos do
     // Mercado Pago — isso já efetiva o pagamento (ou gera o Pix), sem
     // precisar de nenhuma página deles.
@@ -76,6 +82,7 @@ Deno.serve(async (req) => {
     const payment = await mpResponse.json()
     if (!mpResponse.ok) {
       await supabase.from('orders').update({ status: 'cancelado' }).eq('id', order.id)
+      await supabase.from('products').update({ status: 'disponivel' }).eq('id', product.id)
       return json({ error: 'Pagamento recusado pelo Mercado Pago.', detail: payment }, 502)
     }
 
@@ -94,6 +101,11 @@ Deno.serve(async (req) => {
 
     if (novoStatus === 'pago') {
       notificarNovoPedido(supabase, product, order).catch(() => {})
+    } else if (novoStatus === 'cancelado') {
+      // Pagamento negado na hora (ex: cartao recusado) — ja sabemos que
+      // nao vai vingar, entao devolve a conta pra disponivel sem precisar
+      // de cancelamento manual da equipe.
+      await supabase.from('products').update({ status: 'disponivel' }).eq('id', product.id)
     }
 
     // Devolve pro site o que ele precisa mostrar: se for Pix, o QR code e o
