@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { slugify } from '../lib/slugify.js'
+import { imagemOtimizada } from '../lib/imagemOtimizada.js'
 
 const money = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v)
 
@@ -32,7 +33,7 @@ export default function ProductCard({ product, taxas }) {
         ) : capa.type === 'video' ? (
           <video src={capa.url} muted className="h-full w-full object-contain" />
         ) : (
-          <img src={capa.url} alt={product.title} className="h-full w-full object-contain transition-transform group-hover:scale-105" />
+          <img src={imagemOtimizada(capa.url, { width: 400 })} alt={product.title} className="h-full w-full object-contain transition-transform group-hover:scale-105" />
         )}
       </div>
       <div className="flex flex-1 flex-col p-2.5 sm:p-4">
