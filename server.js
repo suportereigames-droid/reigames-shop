@@ -196,6 +196,63 @@ async function handlerCategoria(req, res, next) {
 app.get('/categoria/:slugCategoria', handlerCategoria)
 app.get('/categoria/:slugCategoria/:slugSubcategoria', handlerCategoria)
 
+// Sitemap dinâmico: monta a lista de links direto do banco de dados toda
+// vez que alguém (o Google, por exemplo) acessa /sitemap.xml — assim
+// sempre reflete o que existe agora (categorias, subcategorias, páginas
+// customizadas e produtos à venda), sem precisar atualizar um arquivo à
+// mão. As lojas pessoais (/mika, /mineirinha) ficam de fora de propósito:
+// elas vêm de uma tabela separada (seller_pages) que não é consultada aqui.
+app.get('/sitemap.xml', async (req, res) => {
+  try {
+    const [categoriasRes, subcategoriasRes, paginasRes, produtosRes] = await Promise.all([
+      supabase.from('categories').select('id, name'),
+      supabase.from('subcategories').select('name, category_id'),
+      supabase.from('site_pages').select('slug'),
+      supabase.from('products').select('id').neq('status', 'oculto'),
+    ])
+
+    const categorias = categoriasRes.data || []
+    const subcategorias = subcategoriasRes.data || []
+    const paginas = paginasRes.data || []
+    const produtos = produtosRes.data || []
+
+    const base = `https://${req.get('host')}`
+    const urls = [{ loc: `${base}/`, priority: '1.0' }]
+
+    for (const categoria of categorias) {
+      const slugCategoria = slugify(categoria.name)
+      urls.push({ loc: `${base}/categoria/${slugCategoria}` })
+      const subsDaCategoria = subcategorias.filter((s) => s.category_id === categoria.id)
+      for (const sub of subsDaCategoria) {
+        urls.push({ loc: `${base}/categoria/${slugCategoria}/${slugify(sub.name)}` })
+      }
+    }
+
+    for (const pagina of paginas) {
+      urls.push({ loc: `${base}/pagina/${pagina.slug}` })
+    }
+
+    for (const produto of produtos) {
+      urls.push({ loc: `${base}/produto/${produto.id}` })
+    }
+
+    const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+      '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
+      urls.map((u) =>
+        '<url>\n<loc>' + escaparHtml(u.loc) + '</loc>\n' +
+        (u.priority ? '<priority>' + u.priority + '</priority>\n' : '') +
+        '</url>'
+      ).join('\n') +
+      '\n</urlset>'
+
+    res.set('content-type', 'application/xml; charset=utf-8')
+    res.send(xml)
+  } catch (erro) {
+    console.error('Erro ao gerar sitemap.xml:', erro)
+    res.status(500).send('Erro ao gerar o sitemap.')
+  }
+})
+
 app.use(express.static(path.join(__dirname, 'dist')))
 
 app.use((req, res) => {
