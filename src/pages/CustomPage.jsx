@@ -161,7 +161,7 @@ export default function CustomPage() {
         srcDoc={pagina.content_html}
         onLoad={ajustarAltura}
         scrolling="no"
-        sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-top-navigation-by-user-activation"
+        sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox allow-forms allow-top-navigation-by-user-activation"
         style={{
           width: '100%',
           height: altura,
