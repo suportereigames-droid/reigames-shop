@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
+import { enviarImagemParaStorage } from '../../lib/uploadImagem.js'
 
 export default function PaginaForm() {
   const { id } = useParams()
@@ -47,10 +48,8 @@ export default function PaginaForm() {
     setError('')
     try {
       const path = `paginas/${Date.now()}-${file.name}`
-      const { error: uploadError } = await supabase.storage.from('product-images').upload(path, file)
-      if (uploadError) throw uploadError
-      const { data } = supabase.storage.from('product-images').getPublicUrl(path)
-      setForm((f) => ({ ...f, image_url: data.publicUrl }))
+      const url = await enviarImagemParaStorage(supabase, path, file)
+      setForm((f) => ({ ...f, image_url: url }))
     } catch (err) {
       setError(err.message || 'Não foi possível enviar a imagem.')
     } finally {
