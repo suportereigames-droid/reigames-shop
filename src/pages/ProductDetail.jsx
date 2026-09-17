@@ -319,7 +319,7 @@ export default function ProductDetail() {
         )}
         {whatsappDono && (
           <a
-            href={`https://wa.me/55${whatsappDono.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi! Tenho interesse nessa conta: ${product.title}`)}`}
+            href={`https://wa.me/55${whatsappDono.replace(/\D/g, '')}?text=${encodeURIComponent(`Oi! Tenho interesse nessa conta: ${linkProduto}`)}`}
             target="_blank"
             rel="noreferrer"
             className="btn-ghost flex-1 text-center"
