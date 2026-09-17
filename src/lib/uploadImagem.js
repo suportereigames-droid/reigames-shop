@@ -50,12 +50,14 @@ export async function enviarImagemParaStorage(supabase, path, file, opcoesCompre
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
 
   if (urlAntiga) {
-    const prefixoPublico = `${supabase.supabaseUrl}/storage/v1/object/public/${BUCKET}/`
-    if (urlAntiga.startsWith(prefixoPublico)) {
-      const caminhoAntigo = decodeURIComponent(urlAntiga.slice(prefixoPublico.length))
-      supabase.storage.from(BUCKET).remove([caminhoAntigo]).catch((err) => {
-        console.error('Não foi possível apagar a imagem antiga:', err)
-      })
+    const sufixo = path.split('/').map(encodeURIComponent).join('/')
+    if (data.publicUrl.endsWith(sufixo)) {
+      const prefixoPublico = data.publicUrl.slice(0, data.publicUrl.length - sufixo.length)
+      if (urlAntiga.startsWith(prefixoPublico)) {
+        const caminhoAntigo = decodeURIComponent(urlAntiga.slice(prefixoPublico.length))
+        const { error: erroRemover } = await supabase.storage.from(BUCKET).remove([caminhoAntigo])
+        if (erroRemover) console.error('Não foi possível apagar a imagem antiga:', erroRemover)
+      }
     }
   }
 
