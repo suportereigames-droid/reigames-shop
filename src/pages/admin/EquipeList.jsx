@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../../lib/supabaseClient'
+import { enviarImagemParaStorage } from '../../lib/uploadImagem.js'
 import { useAuth } from '../../context/AuthContext.jsx'
 
 function PainelMembro({ membro, onFechar, onAtualizado }) {
@@ -84,12 +85,15 @@ function PainelMembro({ membro, onFechar, onAtualizado }) {
     if (!file) return
     setEnviandoLogo(true)
     setError('')
-    const path = `lojas/${membro.id}-${Date.now()}-${file.name}`
-    const { error: uploadError } = await supabase.storage.from('product-images').upload(path, file)
-    setEnviandoLogo(false)
-    if (uploadError) { setError(uploadError.message); return }
-    const { data } = supabase.storage.from('product-images').getPublicUrl(path)
-    setLoja((l) => ({ ...l, logo_url: data.publicUrl }))
+    try {
+      const path = `lojas/${membro.id}-${Date.now()}-${file.name}`
+      const url = await enviarImagemParaStorage(supabase, path, file, { cortarQuadrado: true }, loja.logo_url)
+      setLoja((l) => ({ ...l, logo_url: url }))
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setEnviandoLogo(false)
+    }
   }
 
   async function salvarLoja() {

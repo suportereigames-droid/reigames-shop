@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { enviarImagemParaStorage } from '../../lib/uploadImagem.js'
 
 const BUCKET = 'product-images' // mesmo bucket já criado, funciona pra qualquer imagem
 
@@ -23,10 +24,10 @@ export default function Aparencia() {
 
     if (arquivo) {
       const path = `logo/${Date.now()}-${arquivo.name}`
-      const { error: uploadError } = await supabase.storage.from(BUCKET).upload(path, arquivo)
-      if (!uploadError) {
-        const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
-        url = data.publicUrl
+      try {
+        url = await enviarImagemParaStorage(supabase, path, arquivo, undefined, logoUrl)
+      } catch {
+        // mantém a logo atual se der erro no upload
       }
     }
 

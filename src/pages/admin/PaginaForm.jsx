@@ -48,7 +48,7 @@ export default function PaginaForm() {
     setError('')
     try {
       const path = `paginas/${Date.now()}-${file.name}`
-      const url = await enviarImagemParaStorage(supabase, path, file)
+      const url = await enviarImagemParaStorage(supabase, path, file, undefined, form.image_url)
       setForm((f) => ({ ...f, image_url: url }))
     } catch (err) {
       setError(err.message || 'Não foi possível enviar a imagem.')

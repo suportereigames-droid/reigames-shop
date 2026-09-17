@@ -36,7 +36,7 @@ function comprimirImagem(file, { cortarQuadrado = false, ladoMaximo = 1600, qual
   })
 }
 
-export async function enviarImagemParaStorage(supabase, path, file, opcoesCompressao) {
+export async function enviarImagemParaStorage(supabase, path, file, opcoesCompressao, urlAntiga) {
   let arquivoFinal = file
   if (file.type?.startsWith('image/')) {
     try {
@@ -48,5 +48,14 @@ export async function enviarImagemParaStorage(supabase, path, file, opcoesCompre
   const { error } = await supabase.storage.from(BUCKET).upload(path, arquivoFinal)
   if (error) throw error
   const { data } = supabase.storage.from(BUCKET).getPublicUrl(path)
+
+  if (urlAntiga) {
+    const { data: base } = supabase.storage.from(BUCKET).getPublicUrl('')
+    if (urlAntiga.startsWith(base.publicUrl)) {
+      const caminhoAntigo = decodeURIComponent(urlAntiga.slice(base.publicUrl.length))
+      supabase.storage.from(BUCKET).remove([caminhoAntigo]).catch(() => {})
+    }
+  }
+
   return data.publicUrl
 }

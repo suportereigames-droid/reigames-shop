@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../../lib/supabaseClient'
+import { enviarImagemParaStorage } from '../../lib/uploadImagem.js'
 
 export default function CategoriasList() {
   const [categorias, setCategorias] = useState([])
@@ -72,28 +73,26 @@ export default function CategoriasList() {
 
   async function enviarImagemCategoria(categoria, file) {
     if (!file) return
-    const path = `icones/${Date.now()}-${file.name}`
-    const { error } = await supabase.storage.from('product-images').upload(path, file)
-    if (error) {
-      setError(error.message)
-      return
+    try {
+      const path = `icones/${Date.now()}-${file.name}`
+      const url = await enviarImagemParaStorage(supabase, path, file, undefined, categoria.image_url)
+      await supabase.from('categories').update({ image_url: url }).eq('id', categoria.id)
+      load()
+    } catch (err) {
+      setError(err.message)
     }
-    const { data } = supabase.storage.from('product-images').getPublicUrl(path)
-    await supabase.from('categories').update({ image_url: data.publicUrl }).eq('id', categoria.id)
-    load()
   }
 
   async function enviarImagemSubcategoria(sub, file) {
     if (!file) return
-    const path = `icones/${Date.now()}-${file.name}`
-    const { error } = await supabase.storage.from('product-images').upload(path, file)
-    if (error) {
-      setError(error.message)
-      return
+    try {
+      const path = `icones/${Date.now()}-${file.name}`
+      const url = await enviarImagemParaStorage(supabase, path, file, undefined, sub.image_url)
+      await supabase.from('subcategories').update({ image_url: url }).eq('id', sub.id)
+      load()
+    } catch (err) {
+      setError(err.message)
     }
-    const { data } = supabase.storage.from('product-images').getPublicUrl(path)
-    await supabase.from('subcategories').update({ image_url: data.publicUrl }).eq('id', sub.id)
-    load()
   }
 
   // Atualiza o campo na tela na hora (sem esperar o banco), e salva de
