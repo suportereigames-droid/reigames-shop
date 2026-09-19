@@ -222,7 +222,9 @@ export default function ProductForm() {
       }
       navigate('/admin/produtos')
     } catch (err) {
-      setError('Não foi possível salvar. Verifique os campos e tente de novo.')
+      // TEMPORÁRIO — mostra o erro de verdade do Supabase pra descobrir
+      // o que está impedindo de salvar. Depois volta pra mensagem normal.
+      setError('Erro real: ' + (err?.message || err?.error_description || JSON.stringify(err)))
     } finally {
       setSaving(false)
     }
